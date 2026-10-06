@@ -1,0 +1,15 @@
+{
+  "status": "success",
+  "total_tickets": 0,
+  "total_labels": 0,
+  "metrics": {
+    "accuracy": 0.0,
+    "f1_score": 0.0,
+    "precision": 0.0,
+    "recall": 0.0
+  },
+  "details": {
+    "evaluated_count": 0,
+    "notes": "Initial scaffolding evaluation harness."
+  }
+}

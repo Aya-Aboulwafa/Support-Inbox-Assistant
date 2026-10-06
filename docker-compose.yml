@@ -1,0 +1,37 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: support-inbox-assistant
+    ports:
+      - "8000:8000"
+    volumes:
+      # Live code mounting for development
+      - .:/app
+    environment:
+      # Defaults aligned with local Ollama service
+      # Uses host.docker.internal to route to Ollama running on the host machine
+      - LLM_BASE_URL=http://host.docker.internal:11434/v1
+      - LLM_MODEL=llama3.2:3b
+      - LLM_API_KEY=ollama
+      - ENVIRONMENT=development
+      - DEBUG=true
+    extra_hosts:
+      # Enable host.docker.internal resolution on Linux systems
+      - "host.docker.internal:host-gateway"
+    command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  # Optional local Ollama container if not running Ollama natively on the host
+  # To run with bundled Ollama container: docker compose --profile with-ollama up
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama-service
+    profiles: ["with-ollama"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  ollama_data:
