@@ -3,8 +3,11 @@
 from src.core.config import Settings
 
 
-def test_default_config_values():
-    """Verify default configurations align with specification."""
+def test_default_config_values(monkeypatch):
+    """Verify default configurations align with specification when env is clean."""
+    monkeypatch.delenv("LLM_BASE_URL", raising=False)
+    monkeypatch.delenv("LLM_MODEL", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
     cfg = Settings()
     assert cfg.llm_base_url == "http://localhost:11434/v1"
     assert cfg.llm_model == "llama3.2:3b"
