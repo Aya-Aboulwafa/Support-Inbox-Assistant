@@ -105,7 +105,7 @@ class ApiClient {
   async triageTicket(ticketId) {
     return this._request(`/tickets/${encodeURIComponent(ticketId)}/triage`, {
       method: 'POST'
-    }, 30000);
+    }, 90000);
   }
 
   /**
