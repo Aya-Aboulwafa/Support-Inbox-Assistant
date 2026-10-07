@@ -43,6 +43,13 @@ Examples of Billing vs Bug Disambiguation:
 - "medium": Standard bugs with available workarounds, pre-sales subscription questions, standard data requests.
 - "low": Minor cosmetic glitches, typos, general questions, small feature requests, casual compliments.
 
+Examples of Priority Disambiguation:
+- API outage blocking an entire operations team -> "urgent"
+- Payment page crashes and customers cannot complete payment -> "high"
+- Account is completely inaccessible -> "high"
+- Standard export bug with a workaround -> "medium"
+- Minor UI or cosmetic issue -> "low"
+
 ### ESCALATION RULES:
 Set "escalate": true only when the ticket requires human intervention or immediate attention.
 Escalate when ANY of the following apply:
