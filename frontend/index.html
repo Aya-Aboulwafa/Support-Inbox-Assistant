@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support Inbox Assistant - AI Review Queue</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN (v3) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            dark: {
+              950: '#020617', // Midnight deepest canvas
+              900: '#0B132B', // Deep navy canvas
+              850: '#0F1A3A', // Card navy
+              800: '#15244C', // Border / elevated navy
+              700: '#1E3264',
+            },
+            brand: {
+              50: '#EFF6FF',
+              100: '#DBEAFE',
+              400: '#60A5FA',
+              500: '#3B82F6',
+              600: '#2563EB',
+              700: '#1D4ED8',
+              accent: '#38BDF8', // Cyan glow
+            }
+          },
+          boxShadow: {
+            'glow-blue': '0 0 25px -5px rgba(59, 130, 246, 0.4)',
+            'glow-cyan': '0 0 25px -5px rgba(56, 189, 248, 0.35)',
+            'glow-urgent': '0 0 25px -5px rgba(239, 68, 68, 0.4)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(11, 19, 43, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(59, 130, 246, 0.25);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(59, 130, 246, 0.5);
+    }
+
+    /* Glassmorphism Classes */
+    .glass-panel {
+      background: rgba(11, 19, 43, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(59, 130, 246, 0.15);
+    }
+    .glass-card {
+      background: rgba(15, 26, 58, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(59, 130, 246, 0.12);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card:hover {
+      background: rgba(21, 36, 76, 0.75);
+      border-color: rgba(96, 165, 250, 0.35);
+      transform: translateY(-1px);
+    }
+    .glass-card.active {
+      background: rgba(29, 78, 216, 0.15);
+      border-color: rgba(56, 189, 248, 0.6);
+      box-shadow: 0 0 20px -3px rgba(56, 189, 248, 0.25);
+    }
+
+    /* Ambient background gradient */
+    body {
+      background: radial-gradient(circle at 15% 15%, #0B1938 0%, #020617 50%, #030712 100%);
+      min-height: 100vh;
+      color: #F8FAFC;
+    }
+  </style>
+</head>
+<body class="antialiased overflow-hidden flex flex-col h-screen select-none">
+
+  <!-- ========================================================================= -->
+  <!-- 1. TOP NAVIGATION BAR -->
+  <!-- ========================================================================= -->
+  <header class="h-16 border-b border-dark-800 glass-panel px-6 flex items-center justify-between z-20 shrink-0">
+    <!-- Brand / Title -->
+    <div class="flex items-center space-x-4">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-700 via-brand-600 to-brand-accent p-0.5 shadow-glow-blue flex items-center justify-center">
+        <div class="w-full h-full bg-dark-900 rounded-[10px] flex items-center justify-center">
+          <svg class="w-5 h-5 text-brand-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="text-base font-bold tracking-tight text-white flex items-center gap-2">
+            Support Copilot
+            <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">AI Review Queue</span>
+          </h1>
+        </div>
+        <p class="text-xs text-slate-400 font-medium">Human-in-the-Loop Triage & Draft Copilot</p>
+      </div>
+    </div>
+
+    <!-- Live Counters & Stats Badges -->
+    <div class="hidden md:flex items-center space-x-3 text-xs">
+      <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-dark-850 border border-dark-800">
+        <span class="text-slate-400">Total:</span>
+        <span id="stat-total" class="font-bold text-white">30</span>
+      </div>
+      <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-dark-850 border border-dark-800">
+        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+        <span class="text-slate-400">Pending:</span>
+        <span id="stat-pending" class="font-bold text-amber-300">28</span>
+      </div>
+      <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-dark-850 border border-dark-800">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span class="text-slate-400">Approved:</span>
+        <span id="stat-approved" class="font-bold text-emerald-300">2</span>
+      </div>
+      <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-dark-850 border border-rose-900/40">
+        <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+        <span class="text-slate-400">Urgent/Escalated:</span>
+        <span id="stat-escalated" class="font-bold text-rose-300">1</span>
+      </div>
+    </div>
+
+    <!-- Server Connection Badge & Actions -->
+    <div class="flex items-center space-x-3">
+      <div id="backend-status" class="flex items-center space-x-2 text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span id="backend-status-text">FastAPI: Connected</span>
+      </div>
+      <button onclick="refreshTickets()" title="Refresh Queue" class="p-2 rounded-lg bg-dark-850 hover:bg-dark-800 text-slate-300 hover:text-white border border-dark-800 transition">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- 2. MAIN 2-COLUMN REVIEW QUEUE WORKSPACE -->
+  <!-- ========================================================================= -->
+  <main class="flex-1 flex overflow-hidden">
+    
+    <!-- LEFT PANEL: TICKET QUEUE INBOX (Width: 380px - 420px) -->
+    <section class="w-full md:w-[410px] lg:w-[440px] border-r border-dark-800 flex flex-col glass-panel shrink-0">
+      
+      <!-- Search & Filters Header -->
+      <div class="p-4 border-b border-dark-800 space-y-3">
+        <!-- Search Input -->
+        <div class="relative">
+          <svg class="w-4 h-4 absolute left-3 top-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input 
+            type="text" 
+            id="search-input" 
+            oninput="handleSearch(this.value)"
+            placeholder="Search tickets, sender, or keyword..." 
+            class="w-full bg-dark-900 border border-dark-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition font-medium"
+          >
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="flex items-center justify-between text-xs font-semibold gap-1 bg-dark-900 p-1 rounded-xl border border-dark-800">
+          <button onclick="setFilter('all')" id="tab-all" class="flex-1 py-1.5 rounded-lg text-center bg-brand-600 text-white shadow-sm transition">All</button>
+          <button onclick="setFilter('pending')" id="tab-pending" class="flex-1 py-1.5 rounded-lg text-center text-slate-400 hover:text-white transition">Pending</button>
+          <button onclick="setFilter('triaged')" id="tab-triaged" class="flex-1 py-1.5 rounded-lg text-center text-slate-400 hover:text-white transition">Triaged</button>
+          <button onclick="setFilter('escalated')" id="tab-escalated" class="flex-1 py-1.5 rounded-lg text-center text-slate-400 hover:text-white transition">Escalated</button>
+          <button onclick="setFilter('approved')" id="tab-approved" class="flex-1 py-1.5 rounded-lg text-center text-slate-400 hover:text-white transition">Approved</button>
+        </div>
+      </div>
+
+      <!-- Scrollable Ticket List -->
+      <div id="tickets-container" class="flex-1 overflow-y-auto p-3 space-y-2.5">
+        <!-- Tickets populated via JavaScript -->
+        <div class="text-center py-12 text-slate-400 text-xs animate-pulse">
+          Loading ticket queue...
+        </div>
+      </div>
+
+      <!-- Queue Footer Bar -->
+      <div class="p-3 border-t border-dark-800 flex items-center justify-between text-[11px] text-slate-400 bg-dark-900/60 font-medium">
+        <span id="queue-count-label">Showing 30 tickets</span>
+        <span class="flex items-center gap-1 text-brand-400">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Sort: Urgent first
+        </span>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: TICKET DETAIL & COPILOT ACTION CENTER -->
+    <section class="flex-1 flex flex-col overflow-y-auto bg-dark-950/70 relative">
+      
+      <!-- Top Action Toast / Alert Banner (Hidden by default) -->
+      <div id="action-toast" class="hidden absolute top-4 right-6 z-30 flex items-center space-x-3 px-4 py-3 rounded-xl bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 text-xs shadow-xl animate-fade-in backdrop-blur-md">
+        <svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span id="toast-message" class="font-medium">Action completed successfully.</span>
+      </div>
+
+      <!-- Ticket Review Content Area -->
+      <div id="ticket-detail-view" class="flex-1 p-6 lg:p-8 space-y-6 max-w-5xl mx-auto w-full">
+        
+        <!-- Ticket Header Block -->
+        <div class="glass-card p-6 rounded-2xl border border-dark-800 space-y-4 shadow-xl">
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div class="space-y-1.5 flex-1">
+              <div class="flex items-center space-x-3">
+                <span id="detail-ticket-id" class="font-mono text-xs font-bold px-2.5 py-1 rounded-md bg-brand-500/10 text-brand-400 border border-brand-500/20">T-001</span>
+                <span id="detail-channel-badge" class="text-xs px-2.5 py-1 rounded-md bg-dark-800 text-slate-300 font-medium uppercase tracking-wider flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Email
+                </span>
+                <span id="detail-status-badge" class="text-xs px-2.5 py-1 rounded-md bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">PENDING REVIEW</span>
+              </div>
+              <h2 id="detail-subject" class="text-xl lg:text-2xl font-extrabold text-white tracking-tight">Charged twice for June</h2>
+            </div>
+
+            <!-- Run AI Triage Button -->
+            <button 
+              id="btn-run-triage"
+              onclick="triggerAITriageCurrentTicket()"
+              class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white font-semibold text-xs shadow-glow-blue flex items-center space-x-2 transition cursor-pointer"
+            >
+              <svg class="w-4 h-4 text-brand-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span>Run AI Triage</span>
+            </button>
+          </div>
+
+          <!-- Customer Meta Bar -->
+          <div class="flex items-center space-x-4 pt-3 border-t border-dark-800/80 text-xs text-slate-400">
+            <div class="flex items-center space-x-2">
+              <div class="w-7 h-7 rounded-full bg-brand-500/20 text-brand-300 font-bold flex items-center justify-center text-xs border border-brand-500/30">
+                <span id="detail-avatar-initial">M</span>
+              </div>
+              <div>
+                <span class="text-slate-500">From:</span>
+                <span id="detail-sender" class="font-medium text-slate-200">marta.kovac@example.com</span>
+              </div>
+            </div>
+            <span>•</span>
+            <div>
+              <span class="text-slate-500">Received:</span>
+              <span id="detail-timestamp" class="text-slate-300">2026-06-22T08:15:00Z</span>
+            </div>
+          </div>
+
+          <!-- Customer Original Message Text -->
+          <div class="mt-4 p-4 rounded-xl bg-dark-900/90 border border-dark-800 text-slate-200 text-sm leading-relaxed whitespace-pre-wrap font-sans" id="detail-body">
+Hi, I noticed two identical charges of $49 on my credit card statement for June. Could you please refund the extra charge?
+          </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- AI COPILOT TRIAGE INTELLIGENCE CARD -->
+        <!-- ================================================================= -->
+        <div class="glass-card p-6 rounded-2xl border border-brand-500/30 space-y-5 bg-gradient-to-b from-brand-950/20 to-dark-900/60 shadow-xl">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+              <div class="p-1.5 rounded-lg bg-brand-500/20 text-brand-400 border border-brand-500/30">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <h3 class="text-sm font-bold text-white tracking-tight">AI Copilot Analysis</h3>
+            </div>
+
+            <!-- Escalation Alert Pill -->
+            <div id="detail-escalate-pill" class="flex items-center space-x-1.5 text-xs font-bold px-3 py-1 rounded-full bg-dark-800 text-slate-400 border border-dark-700">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Normal Route</span>
+            </div>
+          </div>
+
+          <!-- AI Summary Box -->
+          <div class="p-3.5 rounded-xl bg-dark-900/90 border border-brand-500/20 space-y-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-brand-400">One-Line Root Cause Summary</span>
+            <p id="detail-ai-summary" class="text-xs lg:text-sm font-semibold text-slate-100">
+              Customer charged twice ($49 each) for June subscription and requests immediate refund.
+            </p>
+          </div>
+
+          <!-- Grid: Category, Priority, Confidence Score -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+            
+            <!-- Category Selector -->
+            <div class="p-3.5 rounded-xl bg-dark-900 border border-dark-800 space-y-1.5">
+              <span class="text-[10px] font-bold uppercase text-slate-400">Classified Category</span>
+              <select id="select-category" onchange="onCategoryChanged(this.value)" class="w-full bg-dark-850 border border-dark-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-brand-300 focus:outline-none focus:border-brand-500">
+                <option value="billing">Billing</option>
+                <option value="bug">Bug</option>
+                <option value="feature_request">Feature Request</option>
+                <option value="account">Account</option>
+                <option value="security">Security</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <!-- Priority Selector -->
+            <div class="p-3.5 rounded-xl bg-dark-900 border border-dark-800 space-y-1.5">
+              <span class="text-[10px] font-bold uppercase text-slate-400">Assigned Priority</span>
+              <select id="select-priority" onchange="onPriorityChanged(this.value)" class="w-full bg-dark-850 border border-dark-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-300 focus:outline-none focus:border-brand-500">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+
+            <!-- Confidence Gauge -->
+            <div class="p-3.5 rounded-xl bg-dark-900 border border-dark-800 space-y-1.5">
+              <div class="flex items-center justify-between text-[10px] font-bold uppercase text-slate-400">
+                <span>Model Confidence</span>
+                <span id="detail-confidence-pct" class="text-emerald-400 font-mono text-xs">98%</span>
+              </div>
+              <div class="w-full h-2 rounded-full bg-dark-800 overflow-hidden">
+                <div id="detail-confidence-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 98%"></div>
+              </div>
+              <span id="detail-confidence-label" class="text-[10px] text-slate-500 block">High certainty prediction</span>
+            </div>
+          </div>
+
+          <!-- Suggested Tags -->
+          <div class="flex flex-wrap items-center gap-2 pt-1 text-xs">
+            <span class="text-[11px] font-bold text-slate-400 mr-1">Tags:</span>
+            <div id="detail-tags-container" class="flex flex-wrap gap-1.5">
+              <span class="px-2 py-0.5 rounded-md bg-dark-800 text-brand-300 border border-dark-700 font-mono text-[11px]">#billing</span>
+              <span class="px-2 py-0.5 rounded-md bg-dark-800 text-brand-300 border border-dark-700 font-mono text-[11px]">#refund</span>
+              <span class="px-2 py-0.5 rounded-md bg-dark-800 text-brand-300 border border-dark-700 font-mono text-[11px]">#duplicate-charge</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- HUMAN-IN-THE-LOOP RESPONSE DRAFT EDITOR -->
+        <!-- ================================================================= -->
+        <div class="glass-card p-6 rounded-2xl border border-dark-800 space-y-4 shadow-xl">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <div class="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </div>
+              <h3 class="text-sm font-bold text-white tracking-tight">AI Suggested Reply (Editable)</h3>
+            </div>
+            
+            <span class="text-[11px] text-slate-400 flex items-center gap-1 font-medium">
+              <svg class="w-3.5 h-3.5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+              Review or customize before sending
+            </span>
+          </div>
+
+          <!-- Quick Snippets Insertion Toolbar -->
+          <div class="flex flex-wrap items-center gap-2 pt-1 pb-1">
+            <span class="text-[10px] font-bold uppercase text-slate-500">Insert Snippet:</span>
+            <button onclick="insertSnippet('duplicate_refund')" class="px-2.5 py-1 rounded-lg bg-dark-900 hover:bg-dark-800 text-[11px] text-slate-300 hover:text-white border border-dark-700 transition">
+              + Refund Acknowledgment
+            </button>
+            <button onclick="insertSnippet('request_logs')" class="px-2.5 py-1 rounded-lg bg-dark-900 hover:bg-dark-800 text-[11px] text-slate-300 hover:text-white border border-dark-700 transition">
+              + Request Reproduction Steps
+            </button>
+            <button onclick="insertSnippet('password_reset')" class="px-2.5 py-1 rounded-lg bg-dark-900 hover:bg-dark-800 text-[11px] text-slate-300 hover:text-white border border-dark-700 transition">
+              + Password Reset Guide
+            </button>
+            <button onclick="insertSnippet('security_escalated')" class="px-2.5 py-1 rounded-lg bg-dark-900 hover:bg-dark-800 text-[11px] text-slate-300 hover:text-white border border-dark-700 transition">
+              + SecOps Escalation Notice
+            </button>
+          </div>
+
+          <!-- Editable Textarea -->
+          <div class="relative">
+            <textarea 
+              id="editor-reply" 
+              rows="5"
+              oninput="handleReplyInput(this.value)"
+              class="w-full p-4 rounded-xl bg-dark-900 border border-dark-700 text-slate-100 text-sm leading-relaxed focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-sans transition resize-y"
+              placeholder="Draft your customer response here..."
+            >Hi Marta, thank you for reaching out. We apologize for the duplicate charge on your June invoice. I am reviewing your account billing history right now to process the refund for the extra $49 charge immediately. You should see the credit reflected on your statement within 3-5 business days.</textarea>
+            
+            <div class="absolute bottom-3 right-3 text-[10px] text-slate-500 font-mono">
+              <span id="editor-char-count">248</span> chars
+            </div>
+          </div>
+
+          <!-- Internal Agent Notes -->
+          <div class="pt-1">
+            <input 
+              type="text" 
+              id="editor-notes" 
+              placeholder="Internal agent note (optional)..."
+              class="w-full px-3.5 py-2 rounded-xl bg-dark-900/80 border border-dark-800 text-xs text-slate-300 placeholder-slate-600 focus:outline-none focus:border-dark-700 font-medium"
+            >
+          </div>
+
+          <!-- ACTION BUTTONS TOOLBAR -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-dark-800/80">
+            <div class="flex items-center space-x-2">
+              <span class="text-xs text-slate-400">Actions:</span>
+              <button 
+                onclick="saveDraftReply()"
+                class="px-3.5 py-2 rounded-xl bg-dark-900 hover:bg-dark-800 text-slate-200 text-xs font-semibold border border-dark-700 transition flex items-center space-x-1.5"
+              >
+                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+                <span>Save Draft</span>
+              </button>
+            </div>
+
+            <div class="flex items-center space-x-3">
+              <!-- Escalate Button -->
+              <button 
+                onclick="escalateCurrentTicket()"
+                class="px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold text-xs border border-rose-500/30 flex items-center space-x-2 transition cursor-pointer"
+              >
+                <svg class="w-4 h-4 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>Escalate to Tier 2</span>
+              </button>
+
+              <!-- 1-Click Approve & Send -->
+              <button 
+                onclick="approveCurrentTicket()"
+                class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-xs shadow-lg shadow-emerald-900/30 flex items-center space-x-2 transition cursor-pointer"
+              >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Approve & Send Response</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT APP LOGIC & BACKEND INTEGRATION -->
+  <!-- ========================================================================= -->
+  <script>
+    const API_BASE_URL = 'http://localhost:8000/api/v1';
+
+    // Application State
+    let tickets = [];
+    let selectedTicketId = null;
+    let currentFilter = 'all';
+    let searchQuery = '';
+    let isBackendOnline = false;
+
+    // Snippets Dictionary
+    const SNIPPETS = {
+      duplicate_refund: "Hi, thank you for contacting us regarding the duplicate charge. We have verified the extra transaction and initiated a full refund for the duplicated amount. You should see the credit back on your card within 3 to 5 business days.",
+      request_logs: "Thank you for reporting this issue. To help us reproduce and resolve this quickly, could you please provide: 1. The exact URL or page where this happened, 2. Any error message or screenshot, and 3. The browser version you are using?",
+      password_reset: "Hi, we have sent a secure password reset link to your registered email address. Please follow the instructions to regain access to your dashboard.",
+      security_escalated: "Thank you for bringing this potential security disclosure to our attention. We have escalated this ticket immediately to our dedicated Security Operations Engineering team for prioritized review.",
+    };
+
+    // Initialize application on load
+    document.addEventListener('DOMContentLoaded', () => {
+      checkBackendAndLoad();
+    });
+
+    // Check backend connectivity and load data
+    async function checkBackendAndLoad() {
+      try {
+        const resp = await fetch(`${API_BASE_URL}/health`, { signal: AbortSignal.timeout(3000) });
+        if (resp.ok) {
+          isBackendOnline = true;
+          updateBackendStatusUI(true);
+          await loadTicketsFromBackend();
+          return;
+        }
+      } catch (err) {
+        console.warn('Backend not responding, falling back to local dataset.', err);
+      }
+
+      isBackendOnline = false;
+      updateBackendStatusUI(false);
+      loadMockTickets();
+    }
+
+    function updateBackendStatusUI(online) {
+      const container = document.getElementById('backend-status');
+      const text = document.getElementById('backend-status-text');
+      if (online) {
+        container.className = 'flex items-center space-x-2 text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium';
+        text.innerText = 'FastAPI: Online (Live)';
+      } else {
+        container.className = 'flex items-center space-x-2 text-xs px-3 py-1.5 rounded-lg bg-brand-500/10 text-brand-400 border border-brand-500/20 font-medium';
+        text.innerText = 'Local Queue (Offline Demo)';
+      }
+    }
+
+    // Load tickets from live FastAPI backend
+    async function loadTicketsFromBackend() {
+      try {
+        const resp = await fetch(`${API_BASE_URL}/tickets?limit=100`);
+        if (resp.ok) {
+          const data = await resp.json();
+          tickets = data;
+          renderQueue();
+          if (tickets.length > 0 && !selectedTicketId) {
+            selectTicket(tickets[0].ticket.id);
+          }
+          fetchStats();
+        }
+      } catch (e) {
+        console.error('Error fetching tickets from backend:', e);
+        loadMockTickets();
+      }
+    }
+
+    // Fetch Stats from backend
+    async function fetchStats() {
+      if (!isBackendOnline) return;
+      try {
+        const resp = await fetch(`${API_BASE_URL}/tickets/stats`);
+        if (resp.ok) {
+          const stats = await resp.json();
+          document.getElementById('stat-total').innerText = stats.total_tickets || tickets.length;
+          document.getElementById('stat-pending').innerText = stats.by_status?.pending || 0;
+          document.getElementById('stat-approved').innerText = stats.by_status?.approved || 0;
+          document.getElementById('stat-escalated').innerText = (stats.escalated_count || 0) + (stats.urgent_count || 0);
+        }
+      } catch (e) {}
+    }
+
+    // Fallback Mock Tickets Dataset
+    function loadMockTickets() {
+      tickets = [
+        {
+          ticket: {
+            id: "T-001",
+            channel: "email",
+            sender: "marta.kovac@example.com",
+            subject: "Charged twice for June",
+            body: "Hi, I noticed two identical charges of $49 on my credit card statement for June. Could you please refund the extra charge?",
+            received_at: "2026-06-22T08:15:00Z"
+          },
+          status: "pending",
+          triage: {
+            category: "billing",
+            priority: "high",
+            summary: "Customer charged twice ($49 each) for June subscription and requests immediate refund.",
+            suggested_reply: "Hi Marta, thank you for reaching out. We apologize for the duplicate charge on your June invoice. I am reviewing your account billing history right now to process the refund for the extra $49 charge immediately. You should see the credit reflected on your statement within 3-5 business days.",
+            suggested_tags: ["billing", "refund", "duplicate-charge"],
+            confidence: 0.98,
+            escalate: false
+          }
+        },
+        {
+          ticket: {
+            id: "T-002",
+            channel: "webform",
+            sender: "dev_null@example.com",
+            subject: "App crashes on export",
+            body: "Every time I click 'Export as CSV' on the analytics page with date range > 30 days, the tab crashes with an out of memory error.",
+            received_at: "2026-06-22T08:45:00Z"
+          },
+          status: "pending",
+          triage: {
+            category: "bug",
+            priority: "high",
+            summary: "Analytics CSV export crashes tab with OOM on date ranges over 30 days.",
+            suggested_reply: "Hello, thank you for reporting this issue. Our engineering team has logged this memory leak on large CSV exports. In the meantime, exporting in batches under 30 days works around the issue.",
+            suggested_tags: ["bug", "export", "crash"],
+            confidence: 0.95,
+            escalate: false
+          }
+        },
+        {
+          ticket: {
+            id: "T-014",
+            channel: "email",
+            sender: "sec.researcher@example.com",
+            subject: "Possible vulnerability disclosure",
+            body: "I believe I found an IDOR on your /reports/{id} endpoint - I can read other tenants' report metadata by incrementing the id. Who should I send details to?",
+            received_at: "2026-06-22T13:30:00Z"
+          },
+          status: "escalated",
+          triage: {
+            category: "security",
+            priority: "urgent",
+            summary: "Security researcher reports critical IDOR vulnerability on /reports/{id} endpoint.",
+            suggested_reply: "Thank you for responsibly disclosing this to us. We treat security reports with the highest priority and have escalated this immediately to our SecOps team.",
+            suggested_tags: ["security", "idor", "vulnerability"],
+            confidence: 0.99,
+            escalate: true
+          }
+        },
+        {
+          ticket: {
+            id: "T-018",
+            channel: "chat",
+            sender: "ambiguous@example.com",
+            subject: "it doesn't work",
+            body: "doesnt work anymore. please fix asap",
+            received_at: "2026-06-22T15:08:00Z"
+          },
+          status: "pending",
+          triage: {
+            category: "other",
+            priority: "medium",
+            summary: "Customer reports generic malfunction without specific error details.",
+            suggested_reply: "Hi there, we want to help resolve this quickly. Could you please specify which feature you were using and any error message you saw?",
+            suggested_tags: ["needs-info", "unclear"],
+            confidence: 0.55,
+            escalate: true
+          }
+        }
+      ];
+
+      renderQueue();
+      selectTicket("T-001");
+      updateStatsLocally();
+    }
+
+    function updateStatsLocally() {
+      document.getElementById('stat-total').innerText = tickets.length;
+      document.getElementById('stat-pending').innerText = tickets.filter(t => t.status === 'pending').length;
+      document.getElementById('stat-approved').innerText = tickets.filter(t => t.status === 'approved').length;
+      document.getElementById('stat-escalated').innerText = tickets.filter(t => t.status === 'escalated' || (t.triage && t.triage.priority === 'urgent')).length;
+    }
+
+    // Render Ticket Queue
+    function renderQueue() {
+      const container = document.getElementById('tickets-container');
+      
+      const filtered = tickets.filter(t => {
+        // Tab Filter
+        if (currentFilter === 'pending' && t.status !== 'pending') return false;
+        if (currentFilter === 'triaged' && t.status !== 'triaged') return false;
+        if (currentFilter === 'escalated' && t.status !== 'escalated') return false;
+        if (currentFilter === 'approved' && t.status !== 'approved') return false;
+
+        // Search Filter
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase();
+          const matchSub = (t.ticket.subject || '').toLowerCase().includes(q);
+          const matchBody = (t.ticket.body || '').toLowerCase().includes(q);
+          const matchFrom = (t.ticket.sender || '').toLowerCase().includes(q);
+          const matchId = (t.ticket.id || '').toLowerCase().includes(q);
+          return matchSub || matchBody || matchFrom || matchId;
+        }
+        return true;
+      });
+
+      document.getElementById('queue-count-label').innerText = `Showing ${filtered.length} of ${tickets.length} tickets`;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center text-slate-500 text-xs">
+            <svg class="w-8 h-8 mx-auto text-slate-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            </svg>
+            No tickets match the selected criteria.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(t => {
+        const item = t.ticket;
+        const triage = t.triage || {};
+        const isSelected = item.id === selectedTicketId;
+        const priority = triage.priority || 'medium';
+        const category = triage.category || 'other';
+        const isEscalated = triage.escalate || t.status === 'escalated';
+        const confidence = triage.confidence !== undefined ? Math.round(triage.confidence * 100) : null;
+
+        // Badge colors
+        let priorityBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30">MED</span>';
+        if (priority === 'urgent') {
+          priorityBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse">URGENT</span>';
+        } else if (priority === 'high') {
+          priorityBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">HIGH</span>';
+        } else if (priority === 'low') {
+          priorityBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-500/20 text-slate-300 border border-slate-500/30">LOW</span>';
+        }
+
+        return `
+          <div 
+            onclick="selectTicket('${item.id}')"
+            class="glass-card p-3.5 rounded-xl cursor-pointer ${isSelected ? 'active' : ''} space-y-2"
+          >
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="font-mono text-[11px] font-bold text-slate-300">${item.id}</span>
+                <span class="text-[10px] font-medium text-slate-500 uppercase">${item.channel || 'email'}</span>
+                ${isEscalated ? '<span class="px-1.5 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-400 font-bold">! ESCALATE</span>' : ''}
+              </div>
+              <div class="flex items-center space-x-1.5">
+                ${priorityBadge}
+              </div>
+            </div>
+
+            <h4 class="text-xs font-bold text-white line-clamp-1 leading-snug">${escapeHtml(item.subject || '(No Subject)')}</h4>
+            <p class="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">${escapeHtml(item.body || '')}</p>
+
+            <div class="flex items-center justify-between pt-1 border-t border-dark-800/80 text-[10px] text-slate-400">
+              <span class="truncate max-w-[170px] text-slate-500">${escapeHtml(item.sender || 'Anonymous')}</span>
+              <div class="flex items-center space-x-2">
+                <span class="text-brand-300 font-medium">#${category}</span>
+                ${confidence !== null ? `<span class="font-mono font-bold ${confidence < 70 ? 'text-rose-400' : 'text-emerald-400'}">${confidence}%</span>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Select and display ticket details
+    function selectTicket(id) {
+      selectedTicketId = id;
+      const record = tickets.find(t => t.ticket.id === id);
+      if (!record) return;
+
+      const ticket = record.ticket;
+      const triage = record.triage || {};
+
+      // Fill header
+      document.getElementById('detail-ticket-id').innerText = ticket.id;
+      document.getElementById('detail-subject').innerText = ticket.subject || '(No Subject)';
+      document.getElementById('detail-sender').innerText = ticket.sender || 'Unknown Customer';
+      document.getElementById('detail-avatar-initial').innerText = (ticket.sender || 'C').charAt(0).toUpperCase();
+      document.getElementById('detail-timestamp').innerText = ticket.received_at || 'Just now';
+      document.getElementById('detail-body').innerText = ticket.body || '';
+
+      // Status Badge
+      const statusBadge = document.getElementById('detail-status-badge');
+      statusBadge.innerText = record.status.toUpperCase();
+      if (record.status === 'approved') {
+        statusBadge.className = 'text-xs px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30';
+      } else if (record.status === 'escalated') {
+        statusBadge.className = 'text-xs px-2.5 py-1 rounded-md bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30';
+      } else {
+        statusBadge.className = 'text-xs px-2.5 py-1 rounded-md bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30';
+      }
+
+      // AI Summary
+      document.getElementById('detail-ai-summary').innerText = triage.summary || 'Click "Run AI Triage" to analyze this ticket with Llama 3.2.';
+
+      // Dropdowns
+      document.getElementById('select-category').value = triage.category || 'other';
+      document.getElementById('select-priority').value = triage.priority || 'medium';
+
+      // Confidence
+      const conf = triage.confidence !== undefined ? Math.round(triage.confidence * 100) : 50;
+      document.getElementById('detail-confidence-pct').innerText = `${conf}%`;
+      const confBar = document.getElementById('detail-confidence-bar');
+      confBar.style.width = `${conf}%`;
+      if (conf < 70) {
+        confBar.className = 'h-full bg-rose-500 rounded-full transition-all duration-500';
+        document.getElementById('detail-confidence-pct').className = 'text-rose-400 font-mono text-xs';
+        document.getElementById('detail-confidence-label').innerText = 'Low certainty prediction (Human review recommended)';
+      } else {
+        confBar.className = 'h-full bg-emerald-500 rounded-full transition-all duration-500';
+        document.getElementById('detail-confidence-pct').className = 'text-emerald-400 font-mono text-xs';
+        document.getElementById('detail-confidence-label').innerText = 'High certainty prediction';
+      }
+
+      // Tags
+      const tagsContainer = document.getElementById('detail-tags-container');
+      const tags = triage.suggested_tags || ['support', triage.category || 'ticket'];
+      tagsContainer.innerHTML = tags.map(tag => `
+        <span class="px-2 py-0.5 rounded-md bg-dark-800 text-brand-300 border border-dark-700 font-mono text-[11px]">#${escapeHtml(tag)}</span>
+      `).join('');
+
+      // Escalation pill
+      const escalatePill = document.getElementById('detail-escalate-pill');
+      if (triage.escalate || record.status === 'escalated') {
+        escalatePill.className = 'flex items-center space-x-1.5 text-xs font-bold px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30';
+        escalatePill.innerHTML = `
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span>Immediate Escalation</span>
+        `;
+      } else {
+        escalatePill.className = 'flex items-center space-x-1.5 text-xs font-bold px-3 py-1 rounded-full bg-dark-800 text-slate-400 border border-dark-700';
+        escalatePill.innerHTML = `
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Standard Routing</span>
+        `;
+      }
+
+      // Reply Editor
+      const replyText = record.edited_reply || triage.suggested_reply || '';
+      const editor = document.getElementById('editor-reply');
+      editor.value = replyText;
+      document.getElementById('editor-char-count').innerText = replyText.length;
+      document.getElementById('editor-notes').value = record.notes || '';
+
+      renderQueue();
+    }
+
+    // Trigger Live AI Triage for selected ticket
+    async function triggerAITriageCurrentTicket() {
+      if (!selectedTicketId) return;
+      const btn = document.getElementById('btn-run-triage');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = `
+        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <span>Analyzing with Llama...</span>
+      `;
+      btn.disabled = true;
+
+      try {
+        if (isBackendOnline) {
+          const resp = await fetch(`${API_BASE_URL}/tickets/${selectedTicketId}/triage`, { method: 'POST' });
+          if (resp.ok) {
+            const updated = await resp.json();
+            const idx = tickets.findIndex(t => t.ticket.id === selectedTicketId);
+            if (idx !== -1) tickets[idx] = updated;
+            selectTicket(selectedTicketId);
+            showToast('AI Triage completed successfully!');
+            fetchStats();
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('AI Triage error:', e);
+      } finally {
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+      }
+
+      // Offline simulation fallback
+      showToast('Simulated AI triage response updated.');
+    }
+
+    // 1-Click Approve Action
+    async function approveCurrentTicket() {
+      if (!selectedTicketId) return;
+      const finalReply = document.getElementById('editor-reply').value;
+
+      try {
+        if (isBackendOnline) {
+          const resp = await fetch(`${API_BASE_URL}/tickets/${selectedTicketId}/approve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ final_reply: finalReply })
+          });
+          if (resp.ok) {
+            const updated = await resp.json();
+            const idx = tickets.findIndex(t => t.ticket.id === selectedTicketId);
+            if (idx !== -1) tickets[idx] = updated;
+          }
+        } else {
+          const record = tickets.find(t => t.ticket.id === selectedTicketId);
+          if (record) {
+            record.status = 'approved';
+            record.edited_reply = finalReply;
+          }
+        }
+      } catch (e) {
+        console.error('Approve error:', e);
+      }
+
+      showToast(`Approved & sent reply for ${selectedTicketId}!`);
+      selectTicket(selectedTicketId);
+      updateStatsLocally();
+      fetchStats();
+    }
+
+    // 1-Click Escalate Action
+    async function escalateCurrentTicket() {
+      if (!selectedTicketId) return;
+      const reason = prompt('Reason for escalation to Tier 2:', 'Requires senior engineering / security review');
+      if (reason === null) return;
+
+      try {
+        if (isBackendOnline) {
+          const resp = await fetch(`${API_BASE_URL}/tickets/${selectedTicketId}/escalate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason })
+          });
+          if (resp.ok) {
+            const updated = await resp.json();
+            const idx = tickets.findIndex(t => t.ticket.id === selectedTicketId);
+            if (idx !== -1) tickets[idx] = updated;
+          }
+        } else {
+          const record = tickets.find(t => t.ticket.id === selectedTicketId);
+          if (record) {
+            record.status = 'escalated';
+            if (record.triage) record.triage.escalate = true;
+            record.notes = reason;
+          }
+        }
+      } catch (e) {
+        console.error('Escalate error:', e);
+      }
+
+      showToast(`Ticket ${selectedTicketId} escalated to Tier 2.`);
+      selectTicket(selectedTicketId);
+      updateStatsLocally();
+      fetchStats();
+    }
+
+    // Save Draft Reply
+    async function saveDraftReply() {
+      if (!selectedTicketId) return;
+      const editedReply = document.getElementById('editor-reply').value;
+      const notes = document.getElementById('editor-notes').value;
+
+      try {
+        if (isBackendOnline) {
+          await fetch(`${API_BASE_URL}/tickets/${selectedTicketId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ edited_reply: editedReply, notes })
+          });
+        }
+        const record = tickets.find(t => t.ticket.id === selectedTicketId);
+        if (record) {
+          record.edited_reply = editedReply;
+          record.notes = notes;
+        }
+      } catch (e) {}
+
+      showToast('Draft response saved locally.');
+    }
+
+    // Dropdown change handlers
+    async function onCategoryChanged(newCat) {
+      if (!selectedTicketId) return;
+      if (isBackendOnline) {
+        await fetch(`${API_BASE_URL}/tickets/${selectedTicketId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ category: newCat })
+        });
+      }
+      const record = tickets.find(t => t.ticket.id === selectedTicketId);
+      if (record && record.triage) record.triage.category = newCat;
+      renderQueue();
+    }
+
+    async function onPriorityChanged(newPri) {
+      if (!selectedTicketId) return;
+      if (isBackendOnline) {
+        await fetch(`${API_BASE_URL}/tickets/${selectedTicketId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ priority: newPri })
+        });
+      }
+      const record = tickets.find(t => t.ticket.id === selectedTicketId);
+      if (record && record.triage) record.triage.priority = newPri;
+      renderQueue();
+    }
+
+    // Insert predefined snippet
+    function insertSnippet(key) {
+      const snippet = SNIPPETS[key];
+      if (!snippet) return;
+      const editor = document.getElementById('editor-reply');
+      editor.value = (editor.value ? editor.value + '\n\n' : '') + snippet;
+      document.getElementById('editor-char-count').innerText = editor.value.length;
+    }
+
+    function handleReplyInput(val) {
+      document.getElementById('editor-char-count').innerText = val.length;
+    }
+
+    // Filter and search handlers
+    function setFilter(filter) {
+      currentFilter = filter;
+      ['all', 'pending', 'triaged', 'escalated', 'approved'].forEach(f => {
+        const btn = document.getElementById(`tab-${f}`);
+        if (f === filter) {
+          btn.className = 'flex-1 py-1.5 rounded-lg text-center bg-brand-600 text-white shadow-sm transition';
+        } else {
+          btn.className = 'flex-1 py-1.5 rounded-lg text-center text-slate-400 hover:text-white transition';
+        }
+      });
+      renderQueue();
+    }
+
+    function handleSearch(val) {
+      searchQuery = val;
+      renderQueue();
+    }
+
+    function refreshTickets() {
+      checkBackendAndLoad();
+      showToast('Queue refreshed.');
+    }
+
+    // UI Toast Helper
+    function showToast(msg) {
+      const toast = document.getElementById('action-toast');
+      document.getElementById('toast-message').innerText = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3500);
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, m => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[m]);
+    }
+  </script>
+</body>
+</html>
