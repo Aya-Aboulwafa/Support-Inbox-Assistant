@@ -40,6 +40,15 @@ class Settings(BaseModel):
     llm_api_key: str = Field(
         default_factory=lambda: os.getenv("LLM_API_KEY", "ollama")
     )
+    llm_temperature: float = Field(
+        default_factory=lambda: float(os.getenv("LLM_TEMPERATURE", "0.1"))
+    )
+    llm_seed: Optional[int] = Field(
+        default_factory=lambda: int(os.getenv("LLM_SEED", "42")) if os.getenv("LLM_SEED") is not None else 42
+    )
+    llm_max_tokens: int = Field(
+        default_factory=lambda: int(os.getenv("LLM_MAX_TOKENS", "600"))
+    )
 
     @field_validator("llm_base_url", mode="before")
     @classmethod
