@@ -85,14 +85,23 @@
 
 ### Phase 2: نمذجة البيانات ومحرك التنبؤ (Domain Models & LLM Resilience)
 * **الهدف:** بناء العقل المفكر للتطبيق القادر على تحمل عيوب الموديل الصغير.
-* **الخطوات:**
-  1. تعريف الـ Schema:
-     - `Category`: `billing | bug | feature_request | account | security | other`
-     - `Priority`: `low | medium | high | urgent`
-     - `TicketTriage`: يحتوي على `category`, `priority`, `summary`, `suggested_reply`, `confidence`, `escalate`.
-  2. كتابة الـ Prompt المصمم خصيصاً لموديل 3B (قصير، مباشر، يدعم الـ Few-shots).
-  3. تنفيذ آلية الاستدعاء عبر `openai.AsyncOpenAI` الموجهة لـ Ollama endpoint.
-  4. بناء نظام الـ Retry والـ Fallback الآمن.
+* **ما تم إنجازه فعلياً في الكود (`src/schemas/ticket.py`):**
+  1. **عزل الـ Enums الصريحة (`TicketCategory` & `TicketPriority`):**
+     * استخدام `str, Enum` لضمان أن القيم الخارجة من الـ Pydantic Model هي سلاسل نصية نقية (Plain Strings) قابلة للـ Serialization مباشرة دون أي تعقيد.
+     * التقيد التام بالتصنيفات المطلوبة:
+       - الفئات: `billing`, `bug`, `feature_request`, `account`, `security`, `other`.
+       - الأولويات: `low`, `medium`, `high`, `urgent`.
+  2. **نموذج التذكرة الواردة (`Ticket`):**
+     * استخدام `alias="from"` لحقل `sender` مع تفعيل `ConfigDict(populate_by_name=True)`. هذه لمسة هندسية ذكية لأن كلمة `from` محجوزة في بايثون (Reserved Keyword)، وهذا يسمح بقراءة البيانات القادمة من الـ JSON الأصلي بدون أي أخطاء syntax.
+     * الحقول الأساسية: `subject`, `body`, مع حقول إضافية اختيارية `id`, `received_at`, `channel`.
+  3. **نموذج نتائج الـ Triage والـ AI Copilot (`TriageResult`):**
+     * يحتوي على كل المخرجات المطلوبة: `category`, `priority`, `summary`, `suggested_reply`, `confidence`, و `escalate`.
+     * ضبط حدود الثقة (`Field(..., ge=0.0, le=1.0)`) لمنع أي هلوسة في القيم الرقمية خارج النطاق.
+     * إضافة `suggested_tags` كقيمة إضافية تدعم سرعة فلترة التذاكر للموظف البشري.
+* **الخطوات التالية في هذه المرحلة:**
+  1. صياغة الـ Prompt الهندسي المخصص لـ `llama3.2:3b` مع Few-shot Examples.
+  2. بناء محرك الاستدعاء (`src/services/llm.py` و `src/services/triage.py`).
+  3. بناء استراتيجية الـ Fallback والـ Self-correction لو الـ JSON رجع ناقصاً.
 
 ---
 
