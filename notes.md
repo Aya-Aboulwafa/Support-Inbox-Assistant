@@ -107,10 +107,28 @@
          2. إذا كانت الأولوية قصوى (`priority == urgent`).
          3. إذا كانت درجة ثقة الموديل ضعيفة (`confidence < 0.7`).
        - **نقطة قوة للإنترفيو:** *"حتى لو أرجع الموديل بطريق الخطأ `escalate: false` لتذكرة اختراق أمني أو مشكلة حرجة، الـ Business Invariant في الكود يعيد ضبطها إلى `true`، مما يضمن سلامة الـ Human-in-the-loop Pipeline."*
-* **الخطوات التالية في هذه المرحلة:**
-  1. صياغة الـ Prompt الهندسي المخصص لـ `llama3.2:3b` مع Few-shot Examples.
-  2. بناء محرك الاستدعاء (`src/services/llm.py` و `src/services/triage.py`).
-  3. بناء استراتيجية الـ Fallback والـ Self-correction لو الـ JSON رجع ناقصاً.
+  5. **إعداد الاتصال الآمن والموثوق بالـ LLM (`src/core/config.py` & Remote Endpoint):**
+     * تم ربط النظام بخادم Ollama مشفر عبر SSL يعمل بنجاح وموديل `llama3.2:3b` يستجيب بسرعة فائقة.
+     * **حماية تكوين الـ URL (Smart Base-URL Validator):** تم تطوير validator تلقائي في `config.py` يفحص `llm_base_url` ويضيف لاحقة `/v1` تلقائياً إذا نُسيت، لمنع أخطاء 404 الشائعة عند استخدام عميل OpenAI مع Ollama.
+  6. **هندسة الاختبارات التلقائية (Automated Unit Testing):**
+     * إنشاء جناح اختبارات متكامل (`tests/test_schemas.py`, `tests/test_config.py`, `tests/test_api.py`).
+     * تغطية حالات: تطبيع النصوص، الحقول غير المتوقعة، إجبار الـ Escalation على التذاكر الأمنية/الحرجة وضعيفة الثقة، وضمان عزل بيئة الاختبار عن متغيرات الـ `.env`.
+     * نجاح جميع الاختبارات الـ 10 بالكامل عبر `pytest -q` في زمن قياسي (2.24s).
+   7. **صياغة الـ Prompt وهندسة الـ In-Context Guidance (`src/services/prompts.py`):**
+      * تصميم System Prompt دقيق مخصص لـ `llama3.2:3b` يحدد بدقة معايير الـ Categories والـ Priorities وقواعد الـ Escalation.
+      * تضمين أمثلة Few-shot عالية التباين (High-contrast examples) تشمل حالات الدفع المعقدة، البلاغات الأمنية الحرجة، والرسائل الغامضة.
+   8. **محرك الـ Triage المتين ثلاثي الدفاعات (`src/services/triage.py` & `llm.py`):**
+      * **Tier 1 (Deterministic Pre-filtering):** فحص الكلمات المفتاحية الأمنية (`idor`, `vulnerability`, `exploit`) لفرض التصعيد الفوري قبل المعالجة.
+      * **Tier 2 (Structured Prompting):** استدعاء الموديل عبر `generate_json` مع تفعيل JSON mode ودرجة حرارة منخفضة (`0.1`) لضمان الحتمية وسرعة الاستجابة.
+      * **Tier 3 (Validation, Self-correction & Fallback):**
+        - تجريد علامات الماركدوان (`markdown fences stripping`).
+        - التحقق الصارم عبر `TriageResult`.
+        - محاولة تصحيح ذاتي فورية (Single retry with error feedback loop) في حال أي خلل بالـ JSON.
+        - ملاذ أخير آمن (Safe Fallback) يعيد `escalate: true` و `confidence: 0.0` لمنع أي انهيار في النظام.
+   9. **التحقق الشامل والتكامل الحي (Live Integration & Unit Tests):**
+      * إضافة اختبارات للـ TriageService تحاكي حالات النجاح، إزالة الماركدوان، الفلترة الأمنية، والتصحيح الذاتي (`tests/test_triage_service.py`).
+      * نجاح 15 اختباراً بالكامل عبر `pytest -q` في 2.22 ثانية.
+      * اختبار حي على خادم Ollama البعيد أثبت دقة التصنيف وتوليد الردود وسرعة المعالجة.
 
 ---
 

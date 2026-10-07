@@ -1,5 +1,6 @@
 """LLM client service wrapper using OpenAI's client for Ollama/OpenAI-compatible APIs."""
 
+import time
 from typing import Any, Dict, List, Optional
 from openai import AsyncOpenAI
 
@@ -32,15 +33,33 @@ class LLMService:
         temperature: float = 0.2,
         **kwargs: Any,
     ) -> str:
-        """Generate a completion response from the configured model (placeholder)."""
+        """Generate a completion response from the configured model."""
+        start_time = time.perf_counter()
         response = await self.client.chat.completions.create(
             model=self.model,
             messages=messages,  # type: ignore
             temperature=temperature,
             **kwargs,
         )
+        latency = time.perf_counter() - start_time
         choice = response.choices[0]
-        return choice.message.content or ""
+        content = choice.message.content or ""
+        logger.debug(f"LLM call finished in {latency:.2f}s with {len(content)} chars.")
+        return content
+
+    async def generate_json(
+        self,
+        messages: List[Dict[str, str]],
+        temperature: float = 0.1,
+        **kwargs: Any,
+    ) -> str:
+        """Generate a JSON completion response enforcing structured JSON object."""
+        return await self.generate_response(
+            messages=messages,
+            temperature=temperature,
+            response_format={"type": "json_object"},
+            **kwargs,
+        )
 
 
 _llm_service: Optional[LLMService] = None
