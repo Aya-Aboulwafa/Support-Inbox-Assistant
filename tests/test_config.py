@@ -14,6 +14,9 @@ def test_default_config_values(monkeypatch):
     assert cfg.llm_api_key == "ollama"
     assert cfg.host == "0.0.0.0"
     assert cfg.port == 8000
+    assert cfg.llm_temperature == 0.1
+    assert cfg.llm_seed == 42
+    assert cfg.llm_max_tokens == 600
 
 
 def test_custom_config_values():

@@ -3,6 +3,7 @@
 from typing import Optional
 from instructor.core import InstructorRetryException
 
+from src.core.config import settings
 from src.core.logging import logger
 from src.schemas.ticket import Ticket, TicketCategory, TicketPriority, TriageResult
 from src.services.llm import LLMService, get_llm_service
@@ -58,12 +59,19 @@ class TriageService:
         messages = build_triage_messages(ticket)
         try:
             # Instructor automatically executes model call, schema validation, and self-correction retries
+            create_kwargs = {
+                "model": self.llm_service.model,
+                "messages": messages,
+                "response_model": TriageResult,
+                "max_retries": 2,
+                "temperature": settings.llm_temperature,
+                "max_tokens": settings.llm_max_tokens,
+            }
+            if settings.llm_seed is not None:
+                create_kwargs["seed"] = settings.llm_seed
+
             result: TriageResult = await self.llm_service.instructor_client.chat.completions.create(
-                model=self.llm_service.model,
-                messages=messages,
-                response_model=TriageResult,
-                max_retries=2,
-                temperature=0.1,
+                **create_kwargs
             )
             result.ticket_id = ticket.id
         except (InstructorRetryException, Exception) as exc:
