@@ -1,20 +1,19 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Support Inbox Assistant - AI Review Queue</title>
+  <title>Penta-Labs Support Copilot - AI Review Queue</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS CDN (v3) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
@@ -22,27 +21,33 @@
             mono: ['"JetBrains Mono"', 'monospace'],
           },
           colors: {
-            dark: {
-              950: '#020617', // Midnight deepest canvas
-              900: '#0B132B', // Deep navy canvas
-              850: '#0F1A3A', // Card navy
-              800: '#15244C', // Border / elevated navy
-              700: '#1E3264',
+            // Soft slate-stone surfaces (Glare-free light mode)
+            surface: {
+              canvas: '#E4E9F0',     // Soft muted slate background (prevents glare)
+              subtle: '#ECF0F5',     // Workspace background
+              card: '#F7FAFD',       // Soft off-white cards
+              cardElevated: '#FFFFFF',
+              border: '#CBD5E1',     // Defined slate border
+              borderMuted: '#E2E8F0',
             },
             brand: {
-              50: '#EFF6FF',
-              100: '#DBEAFE',
-              400: '#60A5FA',
-              500: '#3B82F6',
-              600: '#2563EB',
-              700: '#1D4ED8',
-              accent: '#38BDF8', // Cyan glow
+              50: '#F7FEE7',
+              100: '#ECFCCB',
+              200: '#D9F99D',
+              300: '#BEF264',
+              400: '#A3E635',
+              500: '#84CC16', // Authentic Penta Lime
+              600: '#65A30D',
+              700: '#4D7C0F',
+              800: '#3F6212',
+              900: '#365314',
             }
           },
           boxShadow: {
-            'glow-blue': '0 0 25px -5px rgba(59, 130, 246, 0.4)',
-            'glow-cyan': '0 0 25px -5px rgba(56, 189, 248, 0.35)',
-            'glow-urgent': '0 0 25px -5px rgba(239, 68, 68, 0.4)',
+            'card': '0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04)',
+            'card-hover': '0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.05)',
+            'card-active': '0 4px 12px -2px rgba(132, 204, 22, 0.2), 0 2px 4px -2px rgba(15, 23, 42, 0.06)',
+            'brand-btn': '0 2px 4px 0 rgba(132, 204, 22, 0.3)',
           }
         }
       }
@@ -56,104 +61,109 @@
       height: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: rgba(11, 19, 43, 0.6);
+      background: #E2E8F0;
     }
     ::-webkit-scrollbar-thumb {
-      background: rgba(59, 130, 246, 0.25);
+      background: #94A3B8;
       border-radius: 9999px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(59, 130, 246, 0.5);
+      background: #64748B;
     }
 
-    /* Glassmorphism Classes */
-    .glass-panel {
-      background: rgba(11, 19, 43, 0.75);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(59, 130, 246, 0.15);
-    }
-    .glass-card {
-      background: rgba(15, 26, 58, 0.6);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(59, 130, 246, 0.12);
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .glass-card:hover {
-      background: rgba(21, 36, 76, 0.75);
-      border-color: rgba(96, 165, 250, 0.35);
-      transform: translateY(-1px);
-    }
-    .glass-card.active {
-      background: rgba(29, 78, 216, 0.15);
-      border-color: rgba(56, 189, 248, 0.6);
-      box-shadow: 0 0 20px -3px rgba(56, 189, 248, 0.25);
-    }
-
-    /* Ambient background gradient */
     body {
-      background: radial-gradient(circle at 15% 15%, #0B1938 0%, #020617 50%, #030712 100%);
+      background-color: #E6EBF2;
+      color: #0F172A;
       min-height: 100vh;
-      color: #F8FAFC;
+    }
+
+    /* Ticket card hover and active transitions */
+    .ticket-card {
+      transition: all 0.15s ease-in-out;
+      border: 1px solid #CBD5E1;
+      background: #F8FAFD;
+    }
+    .ticket-card:hover {
+      border-color: #84CC16;
+      background: #FFFFFF;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px -2px rgba(15, 23, 42, 0.08);
+    }
+    .ticket-card.active {
+      border-color: #84CC16;
+      border-left-width: 4px;
+      border-left-color: #84CC16;
+      background: #FFFFFF;
+      box-shadow: 0 4px 12px -2px rgba(132, 204, 22, 0.22);
     }
   </style>
 </head>
 <body class="antialiased overflow-hidden flex flex-col h-screen select-none">
 
+  <!-- Authentic Penta-Labs Lime Accent Line (Matching Logo Divider) -->
+  <div class="h-[3px] w-full bg-[#84CC16] z-30 shrink-0"></div>
+
   <!-- ========================================================================= -->
-  <!-- 1. TOP NAVIGATION BAR -->
+  <!-- 1. TOP NAVIGATION BAR (Soft Slate Header) -->
   <!-- ========================================================================= -->
-  <header class="h-16 border-b border-dark-800 glass-panel px-6 flex items-center justify-between z-20 shrink-0">
-    <!-- Brand / Title -->
+  <header class="h-16 bg-[#F1F4F9] border-b border-[#CBD5E1] px-6 flex items-center justify-between z-20 shrink-0 shadow-sm">
+    <!-- Brand / Title with Authentic Penta-Labs Logo -->
     <div class="flex items-center space-x-4">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-700 via-brand-600 to-brand-accent p-0.5 shadow-glow-blue flex items-center justify-center">
-        <div class="w-full h-full bg-dark-900 rounded-[10px] flex items-center justify-center">
-          <svg class="w-5 h-5 text-brand-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        </div>
+      <!-- 5-Dot Penta-Labs Geometric Emblem -->
+      <div class="w-10 h-10 rounded-xl bg-white border border-[#CBD5E1] p-1.5 flex items-center justify-center shadow-sm">
+        <svg class="w-7 h-7" viewBox="0 0 100 100" fill="none">
+          <!-- 4 Lime Dots + 1 Black Dot (Penta-Labs Signature Mark) -->
+          <circle cx="28" cy="28" r="14" fill="#84CC16"/>
+          <circle cx="72" cy="28" r="14" fill="#84CC16"/>
+          <circle cx="20" cy="72" r="14" fill="#84CC16"/>
+          <circle cx="50" cy="50" r="14" fill="#84CC16"/>
+          <circle cx="80" cy="72" r="14" fill="#0F172A"/>
+        </svg>
       </div>
+
       <div>
         <div class="flex items-center space-x-2">
-          <h1 class="text-base font-bold tracking-tight text-white flex items-center gap-2">
-            Support Copilot
-            <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">AI Review Queue</span>
+          <h1 class="text-base font-extrabold tracking-tight text-slate-900 flex items-center gap-1">
+            <span class="text-[#84CC16]">Penta</span><span>-Labs</span>
+            <span class="text-slate-400 font-normal mx-1">/</span>
+            <span class="text-slate-800 font-bold text-sm">Support Copilot</span>
+            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-lime-100 text-lime-800 border border-lime-300 ml-1">Review Queue</span>
           </h1>
         </div>
-        <p class="text-xs text-slate-400 font-medium">Human-in-the-Loop Triage & Draft Copilot</p>
+        <p class="text-xs text-slate-500 font-medium">Accelerating Geospatial & Customer Support Intelligence</p>
       </div>
     </div>
 
     <!-- Live Counters & Stats Badges -->
     <div class="hidden md:flex items-center space-x-3 text-xs">
-      <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-dark-850 border border-dark-800">
-        <span class="text-slate-400">Total:</span>
-        <span id="stat-total" class="font-bold text-white">30</span>
+      <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#CBD5E1] shadow-xs">
+        <span class="text-slate-500 font-medium">Total:</span>
+        <span id="stat-total" class="font-bold text-slate-900">30</span>
       </div>
-      <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-dark-850 border border-dark-800">
-        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-        <span class="text-slate-400">Pending:</span>
-        <span id="stat-pending" class="font-bold text-amber-300">28</span>
+      <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 shadow-xs">
+        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+        <span>Pending:</span>
+        <span id="stat-pending" class="font-bold">28</span>
       </div>
-      <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-dark-850 border border-dark-800">
-        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-        <span class="text-slate-400">Approved:</span>
-        <span id="stat-approved" class="font-bold text-emerald-300">2</span>
+      <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-lime-50 border border-lime-300 text-lime-900 shadow-xs">
+        <span class="w-2 h-2 rounded-full bg-[#84CC16]"></span>
+        <span>Approved:</span>
+        <span id="stat-approved" class="font-bold">2</span>
       </div>
-      <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-dark-850 border border-rose-900/40">
+      <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 shadow-xs">
         <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-        <span class="text-slate-400">Urgent/Escalated:</span>
-        <span id="stat-escalated" class="font-bold text-rose-300">1</span>
+        <span>Urgent/Escalated:</span>
+        <span id="stat-escalated" class="font-bold">1</span>
       </div>
     </div>
 
-    <!-- Server Connection Badge & Actions -->
+    <!-- Server Connection Badge & Refresh -->
     <div class="flex items-center space-x-3">
-      <div id="backend-status" class="flex items-center space-x-2 text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
-        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+      <div id="backend-status" class="flex items-center space-x-2 text-xs px-3 py-1.5 rounded-lg bg-lime-50 text-lime-900 border border-lime-300 font-medium">
+        <span class="w-2 h-2 rounded-full bg-[#84CC16]"></span>
         <span id="backend-status-text">FastAPI: Connected</span>
       </div>
-      <button onclick="refreshTickets()" title="Refresh Queue" class="p-2 rounded-lg bg-dark-850 hover:bg-dark-800 text-slate-300 hover:text-white border border-dark-800 transition">
+      <button onclick="refreshTickets()" title="Refresh Queue" class="p-2 rounded-lg bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-[#CBD5E1] transition shadow-xs">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
@@ -166,37 +176,37 @@
   <!-- ========================================================================= -->
   <main class="flex-1 flex overflow-hidden">
     
-    <!-- LEFT PANEL: TICKET QUEUE INBOX (Width: 380px - 420px) -->
-    <section class="w-full md:w-[410px] lg:w-[440px] border-r border-dark-800 flex flex-col glass-panel shrink-0">
+    <!-- LEFT PANEL: TICKET QUEUE INBOX (Soft Slate Surface) -->
+    <section class="w-full md:w-[410px] lg:w-[440px] border-r border-[#CBD5E1] bg-[#EFF3F8] flex flex-col shrink-0">
       
       <!-- Search & Filters Header -->
-      <div class="p-4 border-b border-dark-800 space-y-3">
+      <div class="p-4 border-b border-[#CBD5E1] space-y-3 bg-[#E8EEF5]">
         <!-- Search Input -->
         <div class="relative">
-          <svg class="w-4 h-4 absolute left-3 top-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg class="w-4 h-4 absolute left-3 top-3 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input 
             type="text" 
             id="search-input" 
             oninput="handleSearch(this.value)"
-            placeholder="Search tickets, sender, or keyword..." 
-            class="w-full bg-dark-900 border border-dark-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition font-medium"
+            placeholder="Search tickets, sender, or subject..." 
+            class="w-full bg-white border border-[#CBD5E1] rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#84CC16] focus:ring-2 focus:ring-[#84CC16]/20 transition font-medium shadow-xs"
           >
         </div>
 
         <!-- Filter Tabs -->
-        <div class="flex items-center justify-between text-xs font-semibold gap-1 bg-dark-900 p-1 rounded-xl border border-dark-800">
-          <button onclick="setFilter('all')" id="tab-all" class="flex-1 py-1.5 rounded-lg text-center bg-brand-600 text-white shadow-sm transition">All</button>
-          <button onclick="setFilter('pending')" id="tab-pending" class="flex-1 py-1.5 rounded-lg text-center text-slate-400 hover:text-white transition">Pending</button>
-          <button onclick="setFilter('triaged')" id="tab-triaged" class="flex-1 py-1.5 rounded-lg text-center text-slate-400 hover:text-white transition">Triaged</button>
-          <button onclick="setFilter('escalated')" id="tab-escalated" class="flex-1 py-1.5 rounded-lg text-center text-slate-400 hover:text-white transition">Escalated</button>
-          <button onclick="setFilter('approved')" id="tab-approved" class="flex-1 py-1.5 rounded-lg text-center text-slate-400 hover:text-white transition">Approved</button>
+        <div class="flex items-center justify-between text-xs font-semibold gap-1 bg-[#DDE3ED] p-1 rounded-xl border border-[#CBD5E1]">
+          <button onclick="setFilter('all')" id="tab-all" class="flex-1 py-1.5 rounded-lg text-center bg-white text-slate-900 font-bold shadow-xs transition">All</button>
+          <button onclick="setFilter('pending')" id="tab-pending" class="flex-1 py-1.5 rounded-lg text-center text-slate-600 hover:text-slate-900 transition">Pending</button>
+          <button onclick="setFilter('triaged')" id="tab-triaged" class="flex-1 py-1.5 rounded-lg text-center text-slate-600 hover:text-slate-900 transition">Triaged</button>
+          <button onclick="setFilter('escalated')" id="tab-escalated" class="flex-1 py-1.5 rounded-lg text-center text-slate-600 hover:text-slate-900 transition">Escalated</button>
+          <button onclick="setFilter('approved')" id="tab-approved" class="flex-1 py-1.5 rounded-lg text-center text-slate-600 hover:text-slate-900 transition">Approved</button>
         </div>
       </div>
 
       <!-- Scrollable Ticket List -->
-      <div id="tickets-container" class="flex-1 overflow-y-auto p-3 space-y-2.5">
+      <div id="tickets-container" class="flex-1 overflow-y-auto p-3 space-y-2.5 bg-[#E7ECF4]">
         <!-- Tickets populated via JavaScript -->
         <div class="text-center py-12 text-slate-400 text-xs animate-pulse">
           Loading ticket queue...
@@ -204,10 +214,10 @@
       </div>
 
       <!-- Queue Footer Bar -->
-      <div class="p-3 border-t border-dark-800 flex items-center justify-between text-[11px] text-slate-400 bg-dark-900/60 font-medium">
+      <div class="p-3 border-t border-[#CBD5E1] flex items-center justify-between text-[11px] text-slate-600 bg-[#EEF2F7] font-medium">
         <span id="queue-count-label">Showing 30 tickets</span>
-        <span class="flex items-center gap-1 text-brand-400">
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <span class="flex items-center gap-1 text-slate-800 font-semibold">
+          <svg class="w-3.5 h-3.5 text-[#84CC16]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           Sort: Urgent first
@@ -215,70 +225,68 @@
       </div>
     </section>
 
-    <!-- RIGHT PANEL: TICKET DETAIL & COPILOT ACTION CENTER -->
-    <section class="flex-1 flex flex-col overflow-y-auto bg-dark-950/70 relative">
+    <!-- RIGHT PANEL: TICKET DETAIL & COPILOT ACTION CENTER (Calm Workspace) -->
+    <section class="flex-1 flex flex-col overflow-y-auto bg-[#E6EBF2] relative">
       
-      <!-- Top Action Toast / Alert Banner (Hidden by default) -->
-      <div id="action-toast" class="hidden absolute top-4 right-6 z-30 flex items-center space-x-3 px-4 py-3 rounded-xl bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 text-xs shadow-xl animate-fade-in backdrop-blur-md">
-        <svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-        </svg>
+      <!-- Top Action Toast / Alert Banner -->
+      <div id="action-toast" class="hidden absolute top-4 right-6 z-30 flex items-center space-x-3 px-4 py-3 rounded-xl bg-slate-900 text-white text-xs shadow-xl animate-fade-in">
+        <div class="w-5 h-5 rounded-full bg-[#84CC16] text-slate-900 flex items-center justify-center font-bold text-xs">✓</div>
         <span id="toast-message" class="font-medium">Action completed successfully.</span>
       </div>
 
       <!-- Ticket Review Content Area -->
-      <div id="ticket-detail-view" class="flex-1 p-6 lg:p-8 space-y-6 max-w-5xl mx-auto w-full">
+      <div id="ticket-detail-view" class="flex-1 p-6 lg:p-8 space-y-5 max-w-5xl mx-auto w-full">
         
-        <!-- Ticket Header Block -->
-        <div class="glass-card p-6 rounded-2xl border border-dark-800 space-y-4 shadow-xl">
+        <!-- Ticket Header Block (Soft Card) -->
+        <div class="bg-[#F8FAFD] p-6 rounded-2xl border border-[#CBD5E1] space-y-4 shadow-sm">
           <div class="flex flex-wrap items-start justify-between gap-4">
             <div class="space-y-1.5 flex-1">
               <div class="flex items-center space-x-3">
-                <span id="detail-ticket-id" class="font-mono text-xs font-bold px-2.5 py-1 rounded-md bg-brand-500/10 text-brand-400 border border-brand-500/20">T-001</span>
-                <span id="detail-channel-badge" class="text-xs px-2.5 py-1 rounded-md bg-dark-800 text-slate-300 font-medium uppercase tracking-wider flex items-center gap-1.5">
-                  <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <span id="detail-ticket-id" class="font-mono text-xs font-bold px-2.5 py-1 rounded-md bg-[#E2E8F0] text-slate-800 border border-[#CBD5E1]">T-001</span>
+                <span id="detail-channel-badge" class="text-xs px-2.5 py-1 rounded-md bg-[#E2E8F0] text-slate-700 font-medium uppercase tracking-wider flex items-center gap-1.5 border border-[#CBD5E1]">
+                  <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                   Email
                 </span>
-                <span id="detail-status-badge" class="text-xs px-2.5 py-1 rounded-md bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">PENDING REVIEW</span>
+                <span id="detail-status-badge" class="text-xs px-2.5 py-1 rounded-md bg-amber-50 text-amber-800 font-semibold border border-amber-200">PENDING REVIEW</span>
               </div>
-              <h2 id="detail-subject" class="text-xl lg:text-2xl font-extrabold text-white tracking-tight">Charged twice for June</h2>
+              <h2 id="detail-subject" class="text-xl lg:text-2xl font-extrabold text-slate-900 tracking-tight">Charged twice for June</h2>
             </div>
 
             <!-- Run AI Triage Button -->
             <button 
               id="btn-run-triage"
               onclick="triggerAITriageCurrentTicket()"
-              class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white font-semibold text-xs shadow-glow-blue flex items-center space-x-2 transition cursor-pointer"
+              class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm flex items-center space-x-2 transition cursor-pointer"
             >
-              <svg class="w-4 h-4 text-brand-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <svg class="w-4 h-4 text-[#84CC16]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
               <span>Run AI Triage</span>
             </button>
           </div>
 
           <!-- Customer Meta Bar -->
-          <div class="flex items-center space-x-4 pt-3 border-t border-dark-800/80 text-xs text-slate-400">
+          <div class="flex items-center space-x-4 pt-3 border-t border-[#E2E8F0] text-xs text-slate-500">
             <div class="flex items-center space-x-2">
-              <div class="w-7 h-7 rounded-full bg-brand-500/20 text-brand-300 font-bold flex items-center justify-center text-xs border border-brand-500/30">
+              <div class="w-7 h-7 rounded-full bg-lime-100 text-lime-800 font-bold flex items-center justify-center text-xs border border-lime-300">
                 <span id="detail-avatar-initial">M</span>
               </div>
               <div>
-                <span class="text-slate-500">From:</span>
-                <span id="detail-sender" class="font-medium text-slate-200">marta.kovac@example.com</span>
+                <span class="text-slate-400">From:</span>
+                <span id="detail-sender" class="font-medium text-slate-800">marta.kovac@example.com</span>
               </div>
             </div>
             <span>•</span>
             <div>
-              <span class="text-slate-500">Received:</span>
-              <span id="detail-timestamp" class="text-slate-300">2026-06-22T08:15:00Z</span>
+              <span class="text-slate-400">Received:</span>
+              <span id="detail-timestamp" class="text-slate-600 font-medium">2026-06-22T08:15:00Z</span>
             </div>
           </div>
 
           <!-- Customer Original Message Text -->
-          <div class="mt-4 p-4 rounded-xl bg-dark-900/90 border border-dark-800 text-slate-200 text-sm leading-relaxed whitespace-pre-wrap font-sans" id="detail-body">
+          <div class="mt-4 p-4 rounded-xl bg-white border border-[#CBD5E1] text-slate-800 text-sm leading-relaxed whitespace-pre-wrap font-sans" id="detail-body">
 Hi, I noticed two identical charges of $49 on my credit card statement for June. Could you please refund the extra charge?
           </div>
         </div>
@@ -286,20 +294,23 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
         <!-- ================================================================= -->
         <!-- AI COPILOT TRIAGE INTELLIGENCE CARD -->
         <!-- ================================================================= -->
-        <div class="glass-card p-6 rounded-2xl border border-brand-500/30 space-y-5 bg-gradient-to-b from-brand-950/20 to-dark-900/60 shadow-xl">
+        <div class="bg-[#F8FAFD] p-6 rounded-2xl border border-lime-300 space-y-5 shadow-sm relative overflow-hidden">
+          <!-- Subtle lime top accent strip -->
+          <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#84CC16] via-lime-400 to-transparent"></div>
+
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2.5">
-              <div class="p-1.5 rounded-lg bg-brand-500/20 text-brand-400 border border-brand-500/30">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div class="p-1.5 rounded-lg bg-lime-100 text-lime-800 border border-lime-300">
+                <svg class="w-4 h-4 text-lime-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
-              <h3 class="text-sm font-bold text-white tracking-tight">AI Copilot Analysis</h3>
+              <h3 class="text-sm font-bold text-slate-900 tracking-tight">AI Copilot Analysis</h3>
             </div>
 
             <!-- Escalation Alert Pill -->
-            <div id="detail-escalate-pill" class="flex items-center space-x-1.5 text-xs font-bold px-3 py-1 rounded-full bg-dark-800 text-slate-400 border border-dark-700">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div id="detail-escalate-pill" class="flex items-center space-x-1.5 text-xs font-bold px-3 py-1 rounded-full bg-[#E2E8F0] text-slate-700 border border-[#CBD5E1]">
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>Normal Route</span>
@@ -307,9 +318,9 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
           </div>
 
           <!-- AI Summary Box -->
-          <div class="p-3.5 rounded-xl bg-dark-900/90 border border-brand-500/20 space-y-1">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-brand-400">One-Line Root Cause Summary</span>
-            <p id="detail-ai-summary" class="text-xs lg:text-sm font-semibold text-slate-100">
+          <div class="p-3.5 rounded-xl bg-white border border-[#CBD5E1] space-y-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-lime-800">One-Line Root Cause Summary</span>
+            <p id="detail-ai-summary" class="text-xs lg:text-sm font-semibold text-slate-900">
               Customer charged twice ($49 each) for June subscription and requests immediate refund.
             </p>
           </div>
@@ -318,9 +329,9 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
             
             <!-- Category Selector -->
-            <div class="p-3.5 rounded-xl bg-dark-900 border border-dark-800 space-y-1.5">
-              <span class="text-[10px] font-bold uppercase text-slate-400">Classified Category</span>
-              <select id="select-category" onchange="onCategoryChanged(this.value)" class="w-full bg-dark-850 border border-dark-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-brand-300 focus:outline-none focus:border-brand-500">
+            <div class="p-3.5 rounded-xl bg-white border border-[#CBD5E1] space-y-1.5">
+              <span class="text-[10px] font-bold uppercase text-slate-500">Classified Category</span>
+              <select id="select-category" onchange="onCategoryChanged(this.value)" class="w-full bg-[#F8FAFD] border border-[#CBD5E1] rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#84CC16] focus:ring-1 focus:ring-[#84CC16]">
                 <option value="billing">Billing</option>
                 <option value="bug">Bug</option>
                 <option value="feature_request">Feature Request</option>
@@ -331,9 +342,9 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
             </div>
 
             <!-- Priority Selector -->
-            <div class="p-3.5 rounded-xl bg-dark-900 border border-dark-800 space-y-1.5">
-              <span class="text-[10px] font-bold uppercase text-slate-400">Assigned Priority</span>
-              <select id="select-priority" onchange="onPriorityChanged(this.value)" class="w-full bg-dark-850 border border-dark-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-300 focus:outline-none focus:border-brand-500">
+            <div class="p-3.5 rounded-xl bg-white border border-[#CBD5E1] space-y-1.5">
+              <span class="text-[10px] font-bold uppercase text-slate-500">Assigned Priority</span>
+              <select id="select-priority" onchange="onPriorityChanged(this.value)" class="w-full bg-[#F8FAFD] border border-[#CBD5E1] rounded-lg px-2.5 py-1.5 text-xs font-bold text-amber-800 focus:outline-none focus:border-[#84CC16] focus:ring-1 focus:ring-[#84CC16]">
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
@@ -342,25 +353,25 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
             </div>
 
             <!-- Confidence Gauge -->
-            <div class="p-3.5 rounded-xl bg-dark-900 border border-dark-800 space-y-1.5">
-              <div class="flex items-center justify-between text-[10px] font-bold uppercase text-slate-400">
+            <div class="p-3.5 rounded-xl bg-white border border-[#CBD5E1] space-y-1.5">
+              <div class="flex items-center justify-between text-[10px] font-bold uppercase text-slate-500">
                 <span>Model Confidence</span>
-                <span id="detail-confidence-pct" class="text-emerald-400 font-mono text-xs">98%</span>
+                <span id="detail-confidence-pct" class="text-lime-700 font-mono text-xs font-bold">98%</span>
               </div>
-              <div class="w-full h-2 rounded-full bg-dark-800 overflow-hidden">
-                <div id="detail-confidence-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 98%"></div>
+              <div class="w-full h-2 rounded-full bg-[#E2E8F0] overflow-hidden">
+                <div id="detail-confidence-bar" class="h-full bg-[#84CC16] rounded-full transition-all duration-500" style="width: 98%"></div>
               </div>
-              <span id="detail-confidence-label" class="text-[10px] text-slate-500 block">High certainty prediction</span>
+              <span id="detail-confidence-label" class="text-[10px] text-slate-500 block font-medium">High certainty prediction</span>
             </div>
           </div>
 
           <!-- Suggested Tags -->
           <div class="flex flex-wrap items-center gap-2 pt-1 text-xs">
-            <span class="text-[11px] font-bold text-slate-400 mr-1">Tags:</span>
+            <span class="text-[11px] font-bold text-slate-500 mr-1">Tags:</span>
             <div id="detail-tags-container" class="flex flex-wrap gap-1.5">
-              <span class="px-2 py-0.5 rounded-md bg-dark-800 text-brand-300 border border-dark-700 font-mono text-[11px]">#billing</span>
-              <span class="px-2 py-0.5 rounded-md bg-dark-800 text-brand-300 border border-dark-700 font-mono text-[11px]">#refund</span>
-              <span class="px-2 py-0.5 rounded-md bg-dark-800 text-brand-300 border border-dark-700 font-mono text-[11px]">#duplicate-charge</span>
+              <span class="px-2 py-0.5 rounded-md bg-[#E2E8F0] text-slate-800 border border-[#CBD5E1] font-mono text-[11px]">#billing</span>
+              <span class="px-2 py-0.5 rounded-md bg-[#E2E8F0] text-slate-800 border border-[#CBD5E1] font-mono text-[11px]">#refund</span>
+              <span class="px-2 py-0.5 rounded-md bg-[#E2E8F0] text-slate-800 border border-[#CBD5E1] font-mono text-[11px]">#duplicate-charge</span>
             </div>
           </div>
         </div>
@@ -368,19 +379,19 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
         <!-- ================================================================= -->
         <!-- HUMAN-IN-THE-LOOP RESPONSE DRAFT EDITOR -->
         <!-- ================================================================= -->
-        <div class="glass-card p-6 rounded-2xl border border-dark-800 space-y-4 shadow-xl">
+        <div class="bg-[#F8FAFD] p-6 rounded-2xl border border-[#CBD5E1] space-y-4 shadow-sm">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
-              <div class="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div class="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-800 border border-[#CBD5E1]">
+                <svg class="w-4 h-4 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </div>
-              <h3 class="text-sm font-bold text-white tracking-tight">AI Suggested Reply (Editable)</h3>
+              <h3 class="text-sm font-bold text-slate-900 tracking-tight">AI Suggested Reply (Editable)</h3>
             </div>
             
-            <span class="text-[11px] text-slate-400 flex items-center gap-1 font-medium">
-              <svg class="w-3.5 h-3.5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <span class="text-[11px] text-slate-500 flex items-center gap-1 font-medium">
+              <svg class="w-3.5 h-3.5 text-[#84CC16]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
               Review or customize before sending
@@ -390,16 +401,16 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
           <!-- Quick Snippets Insertion Toolbar -->
           <div class="flex flex-wrap items-center gap-2 pt-1 pb-1">
             <span class="text-[10px] font-bold uppercase text-slate-500">Insert Snippet:</span>
-            <button onclick="insertSnippet('duplicate_refund')" class="px-2.5 py-1 rounded-lg bg-dark-900 hover:bg-dark-800 text-[11px] text-slate-300 hover:text-white border border-dark-700 transition">
+            <button onclick="insertSnippet('duplicate_refund')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-lime-50 hover:text-lime-900 text-[11px] text-slate-700 border border-[#CBD5E1] transition">
               + Refund Acknowledgment
             </button>
-            <button onclick="insertSnippet('request_logs')" class="px-2.5 py-1 rounded-lg bg-dark-900 hover:bg-dark-800 text-[11px] text-slate-300 hover:text-white border border-dark-700 transition">
+            <button onclick="insertSnippet('request_logs')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-lime-50 hover:text-lime-900 text-[11px] text-slate-700 border border-[#CBD5E1] transition">
               + Request Reproduction Steps
             </button>
-            <button onclick="insertSnippet('password_reset')" class="px-2.5 py-1 rounded-lg bg-dark-900 hover:bg-dark-800 text-[11px] text-slate-300 hover:text-white border border-dark-700 transition">
+            <button onclick="insertSnippet('password_reset')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-lime-50 hover:text-lime-900 text-[11px] text-slate-700 border border-[#CBD5E1] transition">
               + Password Reset Guide
             </button>
-            <button onclick="insertSnippet('security_escalated')" class="px-2.5 py-1 rounded-lg bg-dark-900 hover:bg-dark-800 text-[11px] text-slate-300 hover:text-white border border-dark-700 transition">
+            <button onclick="insertSnippet('security_escalated')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-lime-50 hover:text-lime-900 text-[11px] text-slate-700 border border-[#CBD5E1] transition">
               + SecOps Escalation Notice
             </button>
           </div>
@@ -410,11 +421,11 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
               id="editor-reply" 
               rows="5"
               oninput="handleReplyInput(this.value)"
-              class="w-full p-4 rounded-xl bg-dark-900 border border-dark-700 text-slate-100 text-sm leading-relaxed focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-sans transition resize-y"
+              class="w-full p-4 rounded-xl bg-white border border-[#CBD5E1] text-slate-900 text-sm leading-relaxed focus:outline-none focus:border-[#84CC16] focus:ring-2 focus:ring-[#84CC16]/20 font-sans transition resize-y"
               placeholder="Draft your customer response here..."
             >Hi Marta, thank you for reaching out. We apologize for the duplicate charge on your June invoice. I am reviewing your account billing history right now to process the refund for the extra $49 charge immediately. You should see the credit reflected on your statement within 3-5 business days.</textarea>
             
-            <div class="absolute bottom-3 right-3 text-[10px] text-slate-500 font-mono">
+            <div class="absolute bottom-3 right-3 text-[10px] text-slate-400 font-mono">
               <span id="editor-char-count">248</span> chars
             </div>
           </div>
@@ -425,19 +436,18 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
               type="text" 
               id="editor-notes" 
               placeholder="Internal agent note (optional)..."
-              class="w-full px-3.5 py-2 rounded-xl bg-dark-900/80 border border-dark-800 text-xs text-slate-300 placeholder-slate-600 focus:outline-none focus:border-dark-700 font-medium"
+              class="w-full px-3.5 py-2 rounded-xl bg-white border border-[#CBD5E1] text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#84CC16] font-medium"
             >
           </div>
 
           <!-- ACTION BUTTONS TOOLBAR -->
-          <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-dark-800/80">
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#E2E8F0]">
             <div class="flex items-center space-x-2">
-              <span class="text-xs text-slate-400">Actions:</span>
               <button 
                 onclick="saveDraftReply()"
-                class="px-3.5 py-2 rounded-xl bg-dark-900 hover:bg-dark-800 text-slate-200 text-xs font-semibold border border-dark-700 transition flex items-center space-x-1.5"
+                class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-[#CBD5E1] transition flex items-center space-x-1.5 shadow-xs"
               >
-                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                 </svg>
                 <span>Save Draft</span>
@@ -448,9 +458,9 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
               <!-- Escalate Button -->
               <button 
                 onclick="escalateCurrentTicket()"
-                class="px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold text-xs border border-rose-500/30 flex items-center space-x-2 transition cursor-pointer"
+                class="px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 flex items-center space-x-2 transition cursor-pointer"
               >
-                <svg class="w-4 h-4 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="w-4 h-4 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 <span>Escalate to Tier 2</span>
@@ -459,10 +469,10 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
               <!-- 1-Click Approve & Send -->
               <button 
                 onclick="approveCurrentTicket()"
-                class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-xs shadow-lg shadow-emerald-900/30 flex items-center space-x-2 transition cursor-pointer"
+                class="px-6 py-2.5 rounded-xl bg-[#84CC16] hover:bg-[#74b412] text-slate-950 font-extrabold text-xs shadow-sm flex items-center space-x-2 transition cursor-pointer"
               >
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                <svg class="w-4 h-4 text-slate-950" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
                 </svg>
                 <span>Approve & Send Response</span>
               </button>
@@ -523,10 +533,10 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
       const container = document.getElementById('backend-status');
       const text = document.getElementById('backend-status-text');
       if (online) {
-        container.className = 'flex items-center space-x-2 text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium';
+        container.className = 'flex items-center space-x-2 text-xs px-3 py-1.5 rounded-lg bg-lime-50 text-lime-900 border border-lime-300 font-medium';
         text.innerText = 'FastAPI: Online (Live)';
       } else {
-        container.className = 'flex items-center space-x-2 text-xs px-3 py-1.5 rounded-lg bg-brand-500/10 text-brand-400 border border-brand-500/20 font-medium';
+        container.className = 'flex items-center space-x-2 text-xs px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 border border-[#CBD5E1] font-medium';
         text.innerText = 'Local Queue (Offline Demo)';
       }
     }
@@ -601,99 +611,97 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
           triage: {
             category: "bug",
             priority: "high",
-            summary: "Analytics CSV export crashes tab with OOM on date ranges over 30 days.",
-            suggested_reply: "Hello, thank you for reporting this issue. Our engineering team has logged this memory leak on large CSV exports. In the meantime, exporting in batches under 30 days works around the issue.",
-            suggested_tags: ["bug", "export", "crash"],
+            summary: "Browser crashes with out of memory error during CSV export for date ranges over 30 days.",
+            suggested_reply: "Hi, thank you for reporting this memory crash. Our engineering team has logged this issue with large CSV exports and is investigating a streaming download fix. As a quick workaround, could you export the data in 14-day chunks?",
+            suggested_tags: ["bug", "export", "performance"],
             confidence: 0.95,
             escalate: false
           }
         },
         {
           ticket: {
+            id: "T-003",
+            channel: "chat",
+            sender: "alex.wu@startup.io",
+            subject: "Can we add dark mode?",
+            body: "Love the product so far! Any plans to add an official dark mode theme? Would make working late hours much easier on the eyes.",
+            received_at: "2026-06-22T09:10:00Z"
+          },
+          status: "approved",
+          triage: {
+            category: "feature_request",
+            priority: "low",
+            summary: "User inquires about dark mode theme roadmap for nighttime usage.",
+            suggested_reply: "Hi Alex! Glad you are enjoying the product. Dark mode is currently on our active Q3 roadmap. I have tagged your account so you will be automatically notified once our private beta rollout begins!",
+            suggested_tags: ["feature_request", "ui", "roadmap"],
+            confidence: 0.99,
+            escalate: false
+          }
+        },
+        {
+          ticket: {
             id: "T-014",
-            channel: "email",
-            sender: "sec.researcher@example.com",
-            subject: "Possible vulnerability disclosure",
-            body: "I believe I found an IDOR on your /reports/{id} endpoint - I can read other tenants' report metadata by incrementing the id. Who should I send details to?",
-            received_at: "2026-06-22T13:30:00Z"
+            channel: "security-inbox",
+            sender: "researcher@bugbounty.org",
+            subject: "CRITICAL: IDOR vulnerability allows unauthorized tenant data dump",
+            body: "I was able to enumerate tenant UUIDs in the endpoint /api/v1/workspaces/{id} without authentication and download sensitive customer PII. Proof of concept attached.",
+            received_at: "2026-06-22T11:20:00Z"
           },
           status: "escalated",
           triage: {
             category: "security",
             priority: "urgent",
-            summary: "Security researcher reports critical IDOR vulnerability on /reports/{id} endpoint.",
-            suggested_reply: "Thank you for responsibly disclosing this to us. We treat security reports with the highest priority and have escalated this immediately to our SecOps team.",
-            suggested_tags: ["security", "idor", "vulnerability"],
-            confidence: 0.99,
-            escalate: true
-          }
-        },
-        {
-          ticket: {
-            id: "T-018",
-            channel: "chat",
-            sender: "ambiguous@example.com",
-            subject: "it doesn't work",
-            body: "doesnt work anymore. please fix asap",
-            received_at: "2026-06-22T15:08:00Z"
-          },
-          status: "pending",
-          triage: {
-            category: "other",
-            priority: "medium",
-            summary: "Customer reports generic malfunction without specific error details.",
-            suggested_reply: "Hi there, we want to help resolve this quickly. Could you please specify which feature you were using and any error message you saw?",
-            suggested_tags: ["needs-info", "unclear"],
-            confidence: 0.55,
+            summary: "Critical IDOR vulnerability disclosed allowing unauthorized tenant PII data extraction.",
+            suggested_reply: "Thank you for responsibly disclosing this vulnerability. This has been escalated immediately to our SecOps Engineering Lead for rapid mitigation under our security advisory protocol.",
+            suggested_tags: ["security", "idor", "urgent"],
+            confidence: 1.0,
             escalate: true
           }
         }
       ];
 
       renderQueue();
-      selectTicket("T-001");
-      updateStatsLocally();
+      if (!selectedTicketId) selectTicket("T-001");
     }
 
-    function updateStatsLocally() {
-      document.getElementById('stat-total').innerText = tickets.length;
-      document.getElementById('stat-pending').innerText = tickets.filter(t => t.status === 'pending').length;
-      document.getElementById('stat-approved').innerText = tickets.filter(t => t.status === 'approved').length;
-      document.getElementById('stat-escalated').innerText = tickets.filter(t => t.status === 'escalated' || (t.triage && t.triage.priority === 'urgent')).length;
-    }
-
-    // Render Ticket Queue
+    // Render left sidebar ticket list
     function renderQueue() {
       const container = document.getElementById('tickets-container');
       
-      const filtered = tickets.filter(t => {
-        // Tab Filter
+      let filtered = tickets.filter(t => {
+        // Status filter
         if (currentFilter === 'pending' && t.status !== 'pending') return false;
-        if (currentFilter === 'triaged' && t.status !== 'triaged') return false;
-        if (currentFilter === 'escalated' && t.status !== 'escalated') return false;
+        if (currentFilter === 'triaged' && (!t.triage || t.status !== 'pending')) return false;
+        if (currentFilter === 'escalated' && !t.triage?.escalate && t.status !== 'escalated') return false;
         if (currentFilter === 'approved' && t.status !== 'approved') return false;
 
-        // Search Filter
-        if (searchQuery) {
+        // Search query
+        if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
-          const matchSub = (t.ticket.subject || '').toLowerCase().includes(q);
-          const matchBody = (t.ticket.body || '').toLowerCase().includes(q);
-          const matchFrom = (t.ticket.sender || '').toLowerCase().includes(q);
-          const matchId = (t.ticket.id || '').toLowerCase().includes(q);
-          return matchSub || matchBody || matchFrom || matchId;
+          const subject = (t.ticket.subject || '').toLowerCase();
+          const body = (t.ticket.body || '').toLowerCase();
+          const sender = (t.ticket.sender || '').toLowerCase();
+          const id = (t.ticket.id || '').toLowerCase();
+          if (!subject.includes(q) && !body.includes(q) && !sender.includes(q) && !id.includes(q)) {
+            return false;
+          }
         }
         return true;
       });
 
-      document.getElementById('queue-count-label').innerText = `Showing ${filtered.length} of ${tickets.length} tickets`;
+      // Sort: urgent & escalated first
+      filtered.sort((a, b) => {
+        const aEsc = (a.triage?.escalate || a.triage?.priority === 'urgent') ? 1 : 0;
+        const bEsc = (b.triage?.escalate || b.triage?.priority === 'urgent') ? 1 : 0;
+        return bEsc - aEsc;
+      });
+
+      document.getElementById('queue-count-label').innerText = `Showing ${filtered.length} tickets`;
 
       if (filtered.length === 0) {
         container.innerHTML = `
-          <div class="p-8 text-center text-slate-500 text-xs">
-            <svg class="w-8 h-8 mx-auto text-slate-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-            </svg>
-            No tickets match the selected criteria.
+          <div class="text-center py-12 text-slate-400 text-xs">
+            No tickets match your filter criteria.
           </div>
         `;
         return;
@@ -709,39 +717,39 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
         const confidence = triage.confidence !== undefined ? Math.round(triage.confidence * 100) : null;
 
         // Badge colors
-        let priorityBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30">MED</span>';
+        let priorityBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-lime-100 text-lime-900 border border-lime-300">MED</span>';
         if (priority === 'urgent') {
-          priorityBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse">URGENT</span>';
+          priorityBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-50 text-rose-700 border border-rose-200 animate-pulse">URGENT</span>';
         } else if (priority === 'high') {
-          priorityBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">HIGH</span>';
+          priorityBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-50 text-amber-800 border border-amber-200">HIGH</span>';
         } else if (priority === 'low') {
-          priorityBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-500/20 text-slate-300 border border-slate-500/30">LOW</span>';
+          priorityBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-200 text-slate-700 border border-slate-300">LOW</span>';
         }
 
         return `
           <div 
             onclick="selectTicket('${item.id}')"
-            class="glass-card p-3.5 rounded-xl cursor-pointer ${isSelected ? 'active' : ''} space-y-2"
+            class="ticket-card p-3.5 rounded-xl cursor-pointer ${isSelected ? 'active' : ''} space-y-2 shadow-xs"
           >
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-2">
-                <span class="font-mono text-[11px] font-bold text-slate-300">${item.id}</span>
+                <span class="font-mono text-[11px] font-bold text-slate-900">${item.id}</span>
                 <span class="text-[10px] font-medium text-slate-500 uppercase">${item.channel || 'email'}</span>
-                ${isEscalated ? '<span class="px-1.5 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-400 font-bold">! ESCALATE</span>' : ''}
+                ${isEscalated ? '<span class="px-1.5 py-0.5 rounded text-[10px] bg-rose-50 text-rose-700 font-bold border border-rose-200">! ESCALATE</span>' : ''}
               </div>
               <div class="flex items-center space-x-1.5">
                 ${priorityBadge}
               </div>
             </div>
 
-            <h4 class="text-xs font-bold text-white line-clamp-1 leading-snug">${escapeHtml(item.subject || '(No Subject)')}</h4>
-            <p class="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">${escapeHtml(item.body || '')}</p>
+            <h4 class="text-xs font-bold text-slate-900 line-clamp-1 leading-snug">${escapeHtml(item.subject || '(No Subject)')}</h4>
+            <p class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">${escapeHtml(item.body || '')}</p>
 
-            <div class="flex items-center justify-between pt-1 border-t border-dark-800/80 text-[10px] text-slate-400">
-              <span class="truncate max-w-[170px] text-slate-500">${escapeHtml(item.sender || 'Anonymous')}</span>
+            <div class="flex items-center justify-between pt-1 border-t border-[#E2E8F0] text-[10px] text-slate-500">
+              <span class="truncate max-w-[170px] text-slate-600">${escapeHtml(item.sender || 'Anonymous')}</span>
               <div class="flex items-center space-x-2">
-                <span class="text-brand-300 font-medium">#${category}</span>
-                ${confidence !== null ? `<span class="font-mono font-bold ${confidence < 70 ? 'text-rose-400' : 'text-emerald-400'}">${confidence}%</span>` : ''}
+                <span class="text-slate-700 font-semibold">#${category}</span>
+                ${confidence !== null ? `<span class="font-mono font-bold ${confidence < 70 ? 'text-rose-600' : 'text-lime-700'}">${confidence}%</span>` : ''}
               </div>
             </div>
           </div>
@@ -758,96 +766,105 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
       const ticket = record.ticket;
       const triage = record.triage || {};
 
-      // Fill header
       document.getElementById('detail-ticket-id').innerText = ticket.id;
+      document.getElementById('detail-channel-badge').innerHTML = `
+        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+        ${(ticket.channel || 'EMAIL').toUpperCase()}
+      `;
       document.getElementById('detail-subject').innerText = ticket.subject || '(No Subject)';
-      document.getElementById('detail-sender').innerText = ticket.sender || 'Unknown Customer';
-      document.getElementById('detail-avatar-initial').innerText = (ticket.sender || 'C').charAt(0).toUpperCase();
+      document.getElementById('detail-sender').innerText = ticket.sender || 'Unknown Sender';
+      document.getElementById('detail-avatar-initial').innerText = (ticket.sender ? ticket.sender[0].toUpperCase() : 'U');
       document.getElementById('detail-timestamp').innerText = ticket.received_at || 'Just now';
       document.getElementById('detail-body').innerText = ticket.body || '';
 
       // Status Badge
       const statusBadge = document.getElementById('detail-status-badge');
-      statusBadge.innerText = record.status.toUpperCase();
       if (record.status === 'approved') {
-        statusBadge.className = 'text-xs px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30';
-      } else if (record.status === 'escalated') {
-        statusBadge.className = 'text-xs px-2.5 py-1 rounded-md bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30';
+        statusBadge.className = 'text-xs px-2.5 py-1 rounded-md bg-lime-100 text-lime-900 font-bold border border-lime-300';
+        statusBadge.innerText = 'APPROVED';
+      } else if (record.status === 'escalated' || triage.escalate) {
+        statusBadge.className = 'text-xs px-2.5 py-1 rounded-md bg-rose-50 text-rose-700 font-bold border border-rose-200 animate-pulse';
+        statusBadge.innerText = 'ESCALATED';
       } else {
-        statusBadge.className = 'text-xs px-2.5 py-1 rounded-md bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30';
+        statusBadge.className = 'text-xs px-2.5 py-1 rounded-md bg-amber-50 text-amber-800 font-semibold border border-amber-200';
+        statusBadge.innerText = 'PENDING REVIEW';
       }
 
       // AI Summary
-      document.getElementById('detail-ai-summary').innerText = triage.summary || 'Click "Run AI Triage" to analyze this ticket with Llama 3.2.';
+      document.getElementById('detail-ai-summary').innerText = triage.summary || 'Click "Run AI Triage" to analyze this ticket.';
 
-      // Dropdowns
-      document.getElementById('select-category').value = triage.category || 'other';
-      document.getElementById('select-priority').value = triage.priority || 'medium';
+      // Category & Priority Dropdowns
+      if (triage.category) {
+        document.getElementById('select-category').value = triage.category;
+      }
+      if (triage.priority) {
+        document.getElementById('select-priority').value = triage.priority;
+      }
 
-      // Confidence
-      const conf = triage.confidence !== undefined ? Math.round(triage.confidence * 100) : 50;
-      document.getElementById('detail-confidence-pct').innerText = `${conf}%`;
+      // Confidence Bar
+      const confidence = triage.confidence !== undefined ? Math.round(triage.confidence * 100) : 0;
+      document.getElementById('detail-confidence-pct').innerText = `${confidence}%`;
       const confBar = document.getElementById('detail-confidence-bar');
-      confBar.style.width = `${conf}%`;
-      if (conf < 70) {
-        confBar.className = 'h-full bg-rose-500 rounded-full transition-all duration-500';
-        document.getElementById('detail-confidence-pct').className = 'text-rose-400 font-mono text-xs';
-        document.getElementById('detail-confidence-label').innerText = 'Low certainty prediction (Human review recommended)';
-      } else {
-        confBar.className = 'h-full bg-emerald-500 rounded-full transition-all duration-500';
-        document.getElementById('detail-confidence-pct').className = 'text-emerald-400 font-mono text-xs';
+      confBar.style.width = `${confidence}%`;
+      if (confidence >= 80) {
+        confBar.className = 'h-full bg-[#84CC16] rounded-full transition-all duration-500';
         document.getElementById('detail-confidence-label').innerText = 'High certainty prediction';
+      } else if (confidence >= 50) {
+        confBar.className = 'h-full bg-amber-500 rounded-full transition-all duration-500';
+        document.getElementById('detail-confidence-label').innerText = 'Moderate certainty - review advised';
+      } else {
+        confBar.className = 'h-full bg-rose-500 rounded-full transition-all duration-500';
+        document.getElementById('detail-confidence-label').innerText = 'Low certainty - manual override required';
+      }
+
+      // Escalation pill
+      const escPill = document.getElementById('detail-escalate-pill');
+      if (triage.escalate) {
+        escPill.className = 'flex items-center space-x-1.5 text-xs font-bold px-3 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200';
+        escPill.innerHTML = `
+          <svg class="w-3.5 h-3.5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span>Escalation Required</span>
+        `;
+      } else {
+        escPill.className = 'flex items-center space-x-1.5 text-xs font-bold px-3 py-1 rounded-full bg-[#E2E8F0] text-slate-700 border border-[#CBD5E1]';
+        escPill.innerHTML = `
+          <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Normal Route</span>
+        `;
       }
 
       // Tags
       const tagsContainer = document.getElementById('detail-tags-container');
-      const tags = triage.suggested_tags || ['support', triage.category || 'ticket'];
+      const tags = triage.suggested_tags || [triage.category || 'inbox'];
       tagsContainer.innerHTML = tags.map(tag => `
-        <span class="px-2 py-0.5 rounded-md bg-dark-800 text-brand-300 border border-dark-700 font-mono text-[11px]">#${escapeHtml(tag)}</span>
+        <span class="px-2 py-0.5 rounded-md bg-[#E2E8F0] text-slate-800 border border-[#CBD5E1] font-mono text-[11px]">#${escapeHtml(tag)}</span>
       `).join('');
 
-      // Escalation pill
-      const escalatePill = document.getElementById('detail-escalate-pill');
-      if (triage.escalate || record.status === 'escalated') {
-        escalatePill.className = 'flex items-center space-x-1.5 text-xs font-bold px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30';
-        escalatePill.innerHTML = `
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <span>Immediate Escalation</span>
-        `;
-      } else {
-        escalatePill.className = 'flex items-center space-x-1.5 text-xs font-bold px-3 py-1 rounded-full bg-dark-800 text-slate-400 border border-dark-700';
-        escalatePill.innerHTML = `
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>Standard Routing</span>
-        `;
-      }
+      // Reply editor
+      const replyVal = record.edited_reply || triage.suggested_reply || '';
+      const replyArea = document.getElementById('editor-reply');
+      replyArea.value = replyVal;
+      document.getElementById('editor-char-count').innerText = replyVal.length;
 
-      // Reply Editor
-      const replyText = record.edited_reply || triage.suggested_reply || '';
-      const editor = document.getElementById('editor-reply');
-      editor.value = replyText;
-      document.getElementById('editor-char-count').innerText = replyText.length;
+      // Agent Notes
       document.getElementById('editor-notes').value = record.notes || '';
 
+      // Re-render sidebar to highlight active ticket
       renderQueue();
     }
 
-    // Trigger Live AI Triage for selected ticket
+    // Trigger AI Triage for current ticket
     async function triggerAITriageCurrentTicket() {
       if (!selectedTicketId) return;
+
       const btn = document.getElementById('btn-run-triage');
-      const originalHTML = btn.innerHTML;
-      btn.innerHTML = `
-        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-        </svg>
-        <span>Analyzing with Llama...</span>
-      `;
+      btn.innerHTML = `<span class="animate-spin inline-block mr-1">↻</span> Triaging...`;
       btn.disabled = true;
 
       try {
@@ -858,23 +875,43 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
             const idx = tickets.findIndex(t => t.ticket.id === selectedTicketId);
             if (idx !== -1) tickets[idx] = updated;
             selectTicket(selectedTicketId);
-            showToast('AI Triage completed successfully!');
-            fetchStats();
+            showToast('AI Triage completed successfully.');
             return;
           }
         }
-      } catch (e) {
-        console.error('AI Triage error:', e);
+
+        // Mock simulation if offline
+        await new Promise(r => setTimeout(r, 600));
+        const record = tickets.find(t => t.ticket.id === selectedTicketId);
+        if (record && !record.triage) {
+          record.triage = {
+            category: "billing",
+            priority: "medium",
+            summary: "Analyzed ticket body and generated standard response draft.",
+            suggested_reply: `Hi, thank you for contacting us regarding "${record.ticket.subject}". We are actively looking into this matter.`,
+            suggested_tags: ["triage", "analyzed"],
+            confidence: 0.94,
+            escalate: false
+          };
+        }
+        selectTicket(selectedTicketId);
+        showToast('AI Triage complete (Demo Mode).');
+
+      } catch (err) {
+        console.error(err);
+        showToast('Triage failed: ' + err.message);
       } finally {
-        btn.innerHTML = originalHTML;
+        btn.innerHTML = `
+          <svg class="w-4 h-4 text-[#84CC16]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span>Run AI Triage</span>
+        `;
         btn.disabled = false;
       }
-
-      // Offline simulation fallback
-      showToast('Simulated AI triage response updated.');
     }
 
-    // 1-Click Approve Action
+    // 1-Click Approve and Send Response
     async function approveCurrentTicket() {
       if (!selectedTicketId) return;
       const finalReply = document.getElementById('editor-reply').value;
@@ -898,21 +935,21 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
             record.edited_reply = finalReply;
           }
         }
-      } catch (e) {
-        console.error('Approve error:', e);
-      }
 
-      showToast(`Approved & sent reply for ${selectedTicketId}!`);
-      selectTicket(selectedTicketId);
-      updateStatsLocally();
-      fetchStats();
+        selectTicket(selectedTicketId);
+        fetchStats();
+        showToast(`Ticket ${selectedTicketId} approved and dispatched!`);
+
+      } catch (err) {
+        showToast('Approval error: ' + err.message);
+      }
     }
 
-    // 1-Click Escalate Action
+    // Escalate to Tier 2
     async function escalateCurrentTicket() {
       if (!selectedTicketId) return;
-      const reason = prompt('Reason for escalation to Tier 2:', 'Requires senior engineering / security review');
-      if (reason === null) return;
+      const reason = prompt("Enter escalation reason:", "Requires Tier 2 Engineering Investigation");
+      if (!reason) return;
 
       try {
         if (isBackendOnline) {
@@ -931,20 +968,19 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
           if (record) {
             record.status = 'escalated';
             if (record.triage) record.triage.escalate = true;
-            record.notes = reason;
           }
         }
-      } catch (e) {
-        console.error('Escalate error:', e);
-      }
 
-      showToast(`Ticket ${selectedTicketId} escalated to Tier 2.`);
-      selectTicket(selectedTicketId);
-      updateStatsLocally();
-      fetchStats();
+        selectTicket(selectedTicketId);
+        fetchStats();
+        showToast(`Ticket ${selectedTicketId} escalated to Tier 2.`);
+
+      } catch (err) {
+        showToast('Escalation error: ' + err.message);
+      }
     }
 
-    // Save Draft Reply
+    // Save Draft
     async function saveDraftReply() {
       if (!selectedTicketId) return;
       const editedReply = document.getElementById('editor-reply').value;
@@ -1016,9 +1052,9 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
       ['all', 'pending', 'triaged', 'escalated', 'approved'].forEach(f => {
         const btn = document.getElementById(`tab-${f}`);
         if (f === filter) {
-          btn.className = 'flex-1 py-1.5 rounded-lg text-center bg-brand-600 text-white shadow-sm transition';
+          btn.className = 'flex-1 py-1.5 rounded-lg text-center bg-white text-slate-900 font-bold shadow-xs transition';
         } else {
-          btn.className = 'flex-1 py-1.5 rounded-lg text-center text-slate-400 hover:text-white transition';
+          btn.className = 'flex-1 py-1.5 rounded-lg text-center text-slate-600 hover:text-slate-900 transition';
         }
       });
       renderQueue();
