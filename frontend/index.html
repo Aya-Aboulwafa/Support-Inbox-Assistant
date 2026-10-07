@@ -746,7 +746,7 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
           const q = searchQuery.toLowerCase();
           const subject = (t.ticket.subject || '').toLowerCase();
           const body = (t.ticket.body || '').toLowerCase();
-          const sender = (t.ticket.sender || '').toLowerCase();
+          const sender = (t.ticket.sender || t.ticket.from || '').toLowerCase();
           const id = (t.ticket.id || '').toLowerCase();
           if (!subject.includes(q) && !body.includes(q) && !sender.includes(q) && !id.includes(q)) {
             return false;
@@ -781,6 +781,7 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
         const category = triage.category || 'other';
         const isEscalated = triage.escalate || t.status === 'escalated';
         const confidence = triage.confidence !== undefined ? Math.round(triage.confidence * 100) : null;
+        const itemSender = item.sender || item.from || 'Anonymous';
 
         let priorityBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-lime-100 text-lime-900 border border-lime-300">MED</span>';
         if (priority === 'urgent') {
@@ -811,7 +812,7 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
             <p class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">${escapeHtml(item.body || '')}</p>
 
             <div class="flex items-center justify-between pt-1 border-t border-[#E2E8F0] text-[10px] text-slate-500">
-              <span class="truncate max-w-[170px] text-slate-600">${escapeHtml(item.sender || 'Anonymous')}</span>
+              <span class="truncate max-w-[170px] text-slate-600">${escapeHtml(itemSender)}</span>
               <div class="flex items-center space-x-2">
                 <span class="text-slate-700 font-semibold">#${category}</span>
                 ${confidence !== null ? `<span class="font-mono font-bold ${confidence < 70 ? 'text-rose-600' : 'text-lime-700'}">${confidence}%</span>` : ''}
@@ -843,6 +844,7 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
 
       const ticket = record.ticket;
       const triage = record.triage || {};
+      const senderDisplay = ticket.sender || ticket.from || 'Unknown Sender';
 
       document.getElementById('detail-ticket-id').innerText = ticket.id;
       document.getElementById('detail-channel-badge').innerHTML = `
@@ -852,8 +854,8 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
         ${(ticket.channel || 'EMAIL').toUpperCase()}
       `;
       document.getElementById('detail-subject').innerText = ticket.subject || '(No Subject)';
-      document.getElementById('detail-sender').innerText = ticket.sender || 'Unknown Sender';
-      document.getElementById('detail-avatar-initial').innerText = (ticket.sender ? ticket.sender[0].toUpperCase() : 'U');
+      document.getElementById('detail-sender').innerText = senderDisplay;
+      document.getElementById('detail-avatar-initial').innerText = (senderDisplay && senderDisplay !== 'Unknown Sender' ? senderDisplay[0].toUpperCase() : 'U');
       document.getElementById('detail-timestamp').innerText = ticket.received_at || 'Just now';
       document.getElementById('detail-body').innerText = ticket.body || '';
 

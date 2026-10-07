@@ -2,7 +2,7 @@
 
 from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
 
 class TicketPriority(str, Enum):
@@ -39,9 +39,15 @@ class Ticket(BaseModel):
     id: Optional[str] = Field(default=None, description="Unique ticket identifier")
     subject: str = Field(..., description="Subject or title of the ticket")
     body: str = Field(..., description="Main content or email text of the ticket")
-    sender: Optional[str] = Field(default=None, alias="from", description="Sender email or customer id")
+    sender: Optional[str] = Field(default=None, validation_alias="from", description="Sender email or customer id")
     received_at: Optional[str] = Field(default=None, description="Timestamp when ticket was received")
     channel: Optional[str] = Field(default=None, description="Channel of origin, e.g. email or webform")
+
+    @computed_field(alias="from")
+    @property
+    def from_email(self) -> Optional[str]:
+        """Backwards compatibility alias for 'from' field in serialization."""
+        return self.sender
 
 
 class TriageResult(BaseModel):

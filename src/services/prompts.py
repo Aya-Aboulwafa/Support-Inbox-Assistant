@@ -105,7 +105,7 @@ FEW_SHOT_EXAMPLES: List[Dict[str, str]] = [
             '  "category": "security",\n'
             '  "priority": "urgent",\n'
             '  "summary": "Security researcher reports potential IDOR vulnerability on /reports/{id} endpoint.",\n'
-            '  "suggested_reply": "Thank you for responsibly disclosing this finding to us. We treat security reports with the highest priority. This ticket has been routed to our security engineering team for verification. Please share any further technical details or reproduction steps with us securely.",\n'
+            '  "suggested_reply": "Thank you for responsibly disclosing this finding to us. We treat security reports with high priority. Please share any further technical details or reproduction steps securely so the appropriate team can review the finding.",\n'
             '  "suggested_tags": ["security", "idor", "vulnerability"],\n'
             '  "confidence": 0.99,\n'
             '  "escalate": true\n'
