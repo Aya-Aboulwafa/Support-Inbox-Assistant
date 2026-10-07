@@ -75,10 +75,9 @@ class TriageResult(BaseModel):
 
     @model_validator(mode="after")
     def enforce_escalation_rules(self) -> "TriageResult":
-        """Enforce business rules for auto-escalating sensitive or low-confidence tickets."""
+        """Enforce business rules for auto-escalating urgent or low-confidence tickets."""
         if (
-            self.category == TicketCategory.SECURITY
-            or self.priority == TicketPriority.URGENT
+            self.priority == TicketPriority.URGENT
             or (self.confidence is not None and self.confidence < 0.7)
         ):
             self.escalate = True

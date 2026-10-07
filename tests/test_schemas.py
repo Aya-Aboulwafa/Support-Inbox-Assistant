@@ -38,18 +38,30 @@ def test_triage_result_normalization():
     assert result.escalate is False
 
 
-def test_triage_result_auto_escalation_security():
-    """Verify security category automatically enforces escalate=True."""
+def test_triage_result_security_category_not_auto_escalated():
+    """Verify security category does not automatically enforce escalate=True if not urgent."""
     raw = {
         "category": "security",
         "priority": "medium",
-        "summary": "Vulnerability report",
-        "suggested_reply": "Thank you for the disclosure.",
-        "confidence": 0.99,
+        "summary": "General security audit and compliance question",
+        "suggested_reply": "Thank you for reaching out. We can share our SOC2 report.",
+        "confidence": 0.95,
         "escalate": False,
     }
     result = TriageResult.model_validate(raw)
-    assert result.escalate is True
+    assert result.escalate is False
+
+    # But if urgent, it will auto-escalate
+    raw_urgent = {
+        "category": "security",
+        "priority": "urgent",
+        "summary": "Active data breach report",
+        "suggested_reply": "Investigating immediately.",
+        "confidence": 0.95,
+        "escalate": False,
+    }
+    result_urgent = TriageResult.model_validate(raw_urgent)
+    assert result_urgent.escalate is True
 
 
 def test_triage_result_auto_escalation_urgent():
