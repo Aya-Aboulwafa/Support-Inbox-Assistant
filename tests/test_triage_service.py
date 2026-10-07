@@ -1,36 +1,39 @@
-"""Unit tests for TriageService 3-tier resilience architecture using mocked LLM."""
+"""Unit tests for TriageService 3-tier resilience architecture using Instructor."""
 
-import json
 import pytest
 from unittest.mock import AsyncMock, MagicMock
+from instructor.core import InstructorRetryException
 
-from src.schemas.ticket import Ticket, TicketCategory, TicketPriority
+from src.schemas.ticket import Ticket, TicketCategory, TicketPriority, TriageResult
 from src.services.llm import LLMService
 from src.services.triage import TriageService
 
 
 @pytest.fixture
 def mock_llm_service():
-    """Mock LLMService for offline deterministic testing."""
+    """Mock LLMService with instructor_client for offline deterministic testing."""
     service = MagicMock(spec=LLMService)
+    service.model = "llama3.2:3b"
+    service.instructor_client = MagicMock()
+    service.instructor_client.chat = MagicMock()
+    service.instructor_client.chat.completions = MagicMock()
     return service
 
 
 @pytest.mark.asyncio
 async def test_triage_ticket_success(mock_llm_service):
-    """Verify normal successful triage flow."""
-    mock_llm_service.generate_json = AsyncMock(
-        return_value=json.dumps(
-            {
-                "category": "billing",
-                "priority": "high",
-                "summary": "Customer requesting refund for duplicate transaction.",
-                "suggested_reply": "We are processing your refund.",
-                "suggested_tags": ["billing", "refund"],
-                "confidence": 0.95,
-                "escalate": False,
-            }
-        )
+    """Verify normal successful triage flow via Instructor."""
+    expected_result = TriageResult(
+        category=TicketCategory.BILLING,
+        priority=TicketPriority.HIGH,
+        summary="Customer requesting refund for duplicate transaction.",
+        suggested_reply="We are processing your refund.",
+        suggested_tags=["billing", "refund"],
+        confidence=0.95,
+        escalate=False,
+    )
+    mock_llm_service.instructor_client.chat.completions.create = AsyncMock(
+        return_value=expected_result
     )
 
     triage_service = TriageService(llm_service=mock_llm_service)
@@ -45,45 +48,18 @@ async def test_triage_ticket_success(mock_llm_service):
 
 
 @pytest.mark.asyncio
-async def test_triage_ticket_markdown_fences_stripped(mock_llm_service):
-    """Verify markdown fences (```json ... ```) are safely stripped."""
-    mock_llm_service.generate_json = AsyncMock(
-        return_value=(
-            "```json\n"
-            "{\n"
-            '  "category": "bug",\n'
-            '  "priority": "medium",\n'
-            '  "summary": "Export button not working.",\n'
-            '  "suggested_reply": "We are investigating the export bug.",\n'
-            '  "confidence": 0.88,\n'
-            '  "escalate": false\n'
-            "}\n"
-            "```"
-        )
-    )
-
-    triage_service = TriageService(llm_service=mock_llm_service)
-    ticket = Ticket(id="T-002", subject="Export bug", body="The button does nothing")
-
-    result = await triage_service.triage_ticket(ticket)
-    assert result.category == TicketCategory.BUG
-    assert result.confidence == 0.88
-
-
-@pytest.mark.asyncio
 async def test_triage_ticket_security_prefilter(mock_llm_service):
-    """Verify security keyword pre-filter forces urgent escalation."""
-    mock_llm_service.generate_json = AsyncMock(
-        return_value=json.dumps(
-            {
-                "category": "other",
-                "priority": "low",
-                "summary": "Customer reports something.",
-                "suggested_reply": "Thanks.",
-                "confidence": 0.8,
-                "escalate": False,
-            }
-        )
+    """Verify security keyword pre-filter forces urgent escalation regardless of LLM output."""
+    normal_result = TriageResult(
+        category=TicketCategory.OTHER,
+        priority=TicketPriority.LOW,
+        summary="Security report.",
+        suggested_reply="Thanks.",
+        confidence=0.8,
+        escalate=False,
+    )
+    mock_llm_service.instructor_client.chat.completions.create = AsyncMock(
+        return_value=normal_result
     )
 
     triage_service = TriageService(llm_service=mock_llm_service)
@@ -100,43 +76,14 @@ async def test_triage_ticket_security_prefilter(mock_llm_service):
 
 
 @pytest.mark.asyncio
-async def test_triage_ticket_self_correction_recovery(mock_llm_service):
-    """Verify broken JSON triggers self-correction retry and recovers."""
-    # First call fails with invalid JSON, second call succeeds with valid JSON
-    mock_llm_service.generate_json = AsyncMock(
-        side_effect=[
-            "Invalid non-json string from LLM",
-            json.dumps(
-                {
-                    "category": "account",
-                    "priority": "medium",
-                    "summary": "Password reset needed",
-                    "suggested_reply": "Click this link to reset password",
-                    "confidence": 0.92,
-                    "escalate": False,
-                }
-            ),
-        ]
-    )
-
-    triage_service = TriageService(llm_service=mock_llm_service)
-    ticket = Ticket(id="T-005", subject="Reset password", body="Forgot my password")
-
-    result = await triage_service.triage_ticket(ticket)
-    assert result.category == TicketCategory.ACCOUNT
-    assert result.confidence == 0.92
-    assert mock_llm_service.generate_json.call_count == 2
-
-
-@pytest.mark.asyncio
-async def test_triage_ticket_safe_fallback_on_persistent_failure(mock_llm_service):
-    """Verify safe fallback is returned when self-correction also fails."""
-    # Both initial call and retry return broken data
-    mock_llm_service.generate_json = AsyncMock(
-        side_effect=[
-            "Invalid output 1",
-            "Invalid output 2",
-        ]
+async def test_triage_ticket_safe_fallback_on_instructor_retry_exhausted(mock_llm_service):
+    """Verify safe fallback is returned when Instructor exhausts retries."""
+    mock_llm_service.instructor_client.chat.completions.create = AsyncMock(
+        side_effect=InstructorRetryException(
+            n_attempts=2,
+            total_usage=None,
+            failed_attempts=[],
+        )
     )
 
     triage_service = TriageService(llm_service=mock_llm_service)
@@ -148,3 +95,19 @@ async def test_triage_ticket_safe_fallback_on_persistent_failure(mock_llm_servic
     assert result.escalate is True
     assert result.confidence == 0.0
     assert "fallback" in result.suggested_tags
+
+
+@pytest.mark.asyncio
+async def test_triage_ticket_safe_fallback_on_network_error(mock_llm_service):
+    """Verify safe fallback is returned on connection or runtime error."""
+    mock_llm_service.instructor_client.chat.completions.create = AsyncMock(
+        side_effect=RuntimeError("Connection refused")
+    )
+
+    triage_service = TriageService(llm_service=mock_llm_service)
+    ticket = Ticket(id="T-100", subject="Offline server", body="Server is down")
+
+    result = await triage_service.triage_ticket(ticket)
+    assert result.category == TicketCategory.OTHER
+    assert result.escalate is True
+    assert result.confidence == 0.0

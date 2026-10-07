@@ -1,7 +1,8 @@
-"""LLM client service wrapper using OpenAI's client for Ollama/OpenAI-compatible APIs."""
+"""LLM client service wrapper using OpenAI and Instructor for resilient structured outputs."""
 
 import time
 from typing import Any, Dict, List, Optional
+import instructor
 from openai import AsyncOpenAI
 
 from src.core.config import settings
@@ -9,7 +10,7 @@ from src.core.logging import logger
 
 
 class LLMService:
-    """Service wrapping LLM interactions via OpenAI compatible API."""
+    """Service wrapping LLM interactions via OpenAI and Instructor."""
 
     def __init__(
         self,
@@ -25,7 +26,12 @@ class LLMService:
             base_url=self.base_url,
             api_key=self.api_key,
         )
-        logger.info(f"Initialized LLMService with model '{self.model}' at '{self.base_url}'")
+        # Patch client with Instructor using JSON mode for Ollama/OpenAI compatibility
+        self.instructor_client = instructor.from_openai(
+            self.client,
+            mode=instructor.Mode.JSON,
+        )
+        logger.info(f"Initialized LLMService with Instructor for model '{self.model}' at '{self.base_url}'")
 
     async def generate_response(
         self,
