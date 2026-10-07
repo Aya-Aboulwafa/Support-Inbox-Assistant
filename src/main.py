@@ -8,6 +8,7 @@ from src.api.routes import router as api_router
 from src.core.config import settings
 from src.core.logging import logger, setup_logging
 from src.core.sentry import init_sentry
+from src.services.llm import get_llm_service
 
 
 @asynccontextmanager
@@ -16,6 +17,8 @@ async def lifespan(app: FastAPI):
     setup_logging()
     init_sentry()
     logger.info(f"Starting {settings.app_name} on {settings.host}:{settings.port}")
+    # Pre-warm LLM model to eliminate cold-start triage latency
+    await get_llm_service().warmup()
     yield
     logger.info(f"Shutting down {settings.app_name}")
 

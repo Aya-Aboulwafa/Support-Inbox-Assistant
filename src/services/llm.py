@@ -1,5 +1,6 @@
 """LLM client service wrapper using OpenAI and Instructor for resilient structured outputs."""
 
+import asyncio
 import time
 from typing import Any, Dict, List, Optional
 import instructor
@@ -66,6 +67,27 @@ class LLMService:
             response_format={"type": "json_object"},
             **kwargs,
         )
+
+    async def warmup(self, keep_alive: str = "-1", timeout: float = 10.0) -> bool:
+        """Preload model weights into memory and keep warm in Ollama."""
+        try:
+            start_time = time.perf_counter()
+            # Send lightweight 1-token ping to load model into VRAM/RAM
+            await asyncio.wait_for(
+                self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[{"role": "user", "content": "ping"}],  # type: ignore
+                    max_tokens=1,
+                    extra_body={"keep_alive": keep_alive},
+                ),
+                timeout=timeout,
+            )
+            elapsed = time.perf_counter() - start_time
+            logger.info(f"Model '{self.model}' warmed up in {elapsed:.2f}s (keep_alive='{keep_alive}')")
+            return True
+        except Exception as exc:
+            logger.warning(f"Model warmup skipped or failed for '{self.model}': {exc}")
+            return False
 
 
 _llm_service: Optional[LLMService] = None

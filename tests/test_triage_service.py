@@ -111,3 +111,24 @@ async def test_triage_ticket_safe_fallback_on_network_error(mock_llm_service):
     assert result.category == TicketCategory.OTHER
     assert result.escalate is True
     assert result.confidence == 0.0
+
+
+@pytest.mark.asyncio
+async def test_llm_service_warmup_success():
+    """Verify LLMService.warmup completes successfully and calls chat completions."""
+    service = LLMService(model="llama3.2:3b")
+    service.client.chat.completions.create = AsyncMock(return_value=MagicMock())
+
+    success = await service.warmup(keep_alive="-1", timeout=5.0)
+    assert success is True
+    service.client.chat.completions.create.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_llm_service_warmup_graceful_failure():
+    """Verify LLMService.warmup handles connection/runtime errors gracefully without throwing."""
+    service = LLMService(model="llama3.2:3b")
+    service.client.chat.completions.create = AsyncMock(side_effect=RuntimeError("Ollama offline"))
+
+    success = await service.warmup(keep_alive="-1", timeout=5.0)
+    assert success is False
