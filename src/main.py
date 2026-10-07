@@ -39,6 +39,21 @@ app.add_middleware(
 # Include API routes
 app.include_router(api_router)
 
+# Mount frontend directory for static assets and HTML UI
+from pathlib import Path
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
+frontend_dir = Path(__file__).resolve().parent.parent / "frontend"
+if frontend_dir.exists():
+    app.mount("/frontend", StaticFiles(directory=str(frontend_dir)), name="frontend")
+
+    @app.get("/ui", include_in_schema=False)
+    @app.get("/app", include_in_schema=False)
+    async def serve_ui():
+        """Serve the Human-in-the-Loop review queue frontend."""
+        return FileResponse(str(frontend_dir / "index.html"))
+
 
 @app.get("/", tags=["root"])
 async def root():
@@ -47,6 +62,7 @@ async def root():
         "app": settings.app_name,
         "status": "online",
         "docs_url": "/docs",
+        "ui_url": "/ui",
     }
 
 

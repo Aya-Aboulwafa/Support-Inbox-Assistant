@@ -21,13 +21,13 @@
             mono: ['"JetBrains Mono"', 'monospace'],
           },
           colors: {
-            // Soft slate-stone surfaces (Glare-free light mode)
+            // Soft slate surfaces (glare-free light mode)
             surface: {
-              canvas: '#E4E9F0',     // Soft muted slate background (prevents glare)
-              subtle: '#ECF0F5',     // Workspace background
-              card: '#F7FAFD',       // Soft off-white cards
+              canvas: '#E4E9F0',
+              subtle: '#ECF0F5',
+              card: '#F7FAFD',
               cardElevated: '#FFFFFF',
-              border: '#CBD5E1',     // Defined slate border
+              border: '#CBD5E1',
               borderMuted: '#E2E8F0',
             },
             brand: {
@@ -36,7 +36,7 @@
               200: '#D9F99D',
               300: '#BEF264',
               400: '#A3E635',
-              500: '#84CC16', // Authentic Penta Lime
+              500: '#84CC16', // Official Penta Lime
               600: '#65A30D',
               700: '#4D7C0F',
               800: '#3F6212',
@@ -97,6 +97,16 @@
       box-shadow: 0 4px 12px -2px rgba(132, 204, 22, 0.22);
     }
   </style>
+
+  <!-- Centralized API Client Module -->
+  <script src="/frontend/js/api.js"></script>
+  <script>
+    if (!window.api) {
+      const s = document.createElement('script');
+      s.src = 'js/api.js';
+      document.head.appendChild(s);
+    }
+  </script>
 </head>
 <body class="antialiased overflow-hidden flex flex-col h-screen select-none">
 
@@ -157,12 +167,26 @@
       </div>
     </div>
 
-    <!-- Server Connection Badge & Refresh -->
+    <!-- Actions & Server Status -->
     <div class="flex items-center space-x-3">
+      <!-- + Ingest Ticket Button -->
+      <button 
+        onclick="openIngestModal()" 
+        class="px-3.5 py-1.5 rounded-lg bg-[#84CC16] hover:bg-[#74b412] text-slate-950 font-bold text-xs flex items-center space-x-1.5 shadow-sm transition cursor-pointer"
+      >
+        <svg class="w-3.5 h-3.5 text-slate-950" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+        </svg>
+        <span>+ New Ticket</span>
+      </button>
+
+      <!-- Backend Status Badge -->
       <div id="backend-status" class="flex items-center space-x-2 text-xs px-3 py-1.5 rounded-lg bg-lime-50 text-lime-900 border border-lime-300 font-medium">
         <span class="w-2 h-2 rounded-full bg-[#84CC16]"></span>
-        <span id="backend-status-text">FastAPI: Connected</span>
+        <span id="backend-status-text">FastAPI: Online</span>
       </div>
+
+      <!-- Refresh Button -->
       <button onclick="refreshTickets()" title="Refresh Queue" class="p-2 rounded-lg bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-[#CBD5E1] transition shadow-xs">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -207,7 +231,6 @@
 
       <!-- Scrollable Ticket List -->
       <div id="tickets-container" class="flex-1 overflow-y-auto p-3 space-y-2.5 bg-[#E7ECF4]">
-        <!-- Tickets populated via JavaScript -->
         <div class="text-center py-12 text-slate-400 text-xs animate-pulse">
           Loading ticket queue...
         </div>
@@ -225,19 +248,19 @@
       </div>
     </section>
 
-    <!-- RIGHT PANEL: TICKET DETAIL & COPILOT ACTION CENTER (Calm Workspace) -->
+    <!-- RIGHT PANEL: TICKET DETAIL & COPILOT ACTION CENTER -->
     <section class="flex-1 flex flex-col overflow-y-auto bg-[#E6EBF2] relative">
       
       <!-- Top Action Toast / Alert Banner -->
       <div id="action-toast" class="hidden absolute top-4 right-6 z-30 flex items-center space-x-3 px-4 py-3 rounded-xl bg-slate-900 text-white text-xs shadow-xl animate-fade-in">
-        <div class="w-5 h-5 rounded-full bg-[#84CC16] text-slate-900 flex items-center justify-center font-bold text-xs">✓</div>
+        <div class="w-5 h-5 rounded-full bg-[#84CC16] text-slate-900 flex items-center justify-center font-bold text-xs" id="toast-icon">✓</div>
         <span id="toast-message" class="font-medium">Action completed successfully.</span>
       </div>
 
       <!-- Ticket Review Content Area -->
       <div id="ticket-detail-view" class="flex-1 p-6 lg:p-8 space-y-5 max-w-5xl mx-auto w-full">
         
-        <!-- Ticket Header Block (Soft Card) -->
+        <!-- Ticket Header Block -->
         <div class="bg-[#F8FAFD] p-6 rounded-2xl border border-[#CBD5E1] space-y-4 shadow-sm">
           <div class="flex flex-wrap items-start justify-between gap-4">
             <div class="space-y-1.5 flex-1">
@@ -295,7 +318,6 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
         <!-- AI COPILOT TRIAGE INTELLIGENCE CARD -->
         <!-- ================================================================= -->
         <div class="bg-[#F8FAFD] p-6 rounded-2xl border border-lime-300 space-y-5 shadow-sm relative overflow-hidden">
-          <!-- Subtle lime top accent strip -->
           <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#84CC16] via-lime-400 to-transparent"></div>
 
           <div class="flex items-center justify-between">
@@ -457,6 +479,7 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
             <div class="flex items-center space-x-3">
               <!-- Escalate Button -->
               <button 
+                id="btn-escalate"
                 onclick="escalateCurrentTicket()"
                 class="px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 flex items-center space-x-2 transition cursor-pointer"
               >
@@ -468,6 +491,7 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
 
               <!-- 1-Click Approve & Send -->
               <button 
+                id="btn-approve"
                 onclick="approveCurrentTicket()"
                 class="px-6 py-2.5 rounded-xl bg-[#84CC16] hover:bg-[#74b412] text-slate-950 font-extrabold text-xs shadow-sm flex items-center space-x-2 transition cursor-pointer"
               >
@@ -485,12 +509,82 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
   </main>
 
   <!-- ========================================================================= -->
-  <!-- JAVASCRIPT APP LOGIC & BACKEND INTEGRATION -->
+  <!-- 3. INGEST NEW TICKET MODAL DIALOG -->
+  <!-- ========================================================================= -->
+  <div id="modal-ingest" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-2xl border border-slate-300 w-full max-w-lg shadow-2xl p-6 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-lime-100 flex items-center justify-center text-lime-800 font-bold">
+            +
+          </div>
+          <h3 class="text-base font-extrabold text-slate-900">Ingest New Support Ticket</h3>
+        </div>
+        <button onclick="closeIngestModal()" class="text-slate-400 hover:text-slate-700 text-lg font-bold">✕</button>
+      </div>
+
+      <form onsubmit="submitNewTicket(event)" class="space-y-3.5">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Channel</label>
+            <select id="new-ticket-channel" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-[#84CC16]">
+              <option value="email">Email</option>
+              <option value="webform">Webform</option>
+              <option value="chat">Chat</option>
+              <option value="api">API</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Sender Email</label>
+            <input 
+              type="email" 
+              id="new-ticket-sender" 
+              required 
+              placeholder="customer@domain.com"
+              class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-[#84CC16]"
+            >
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Subject</label>
+          <input 
+            type="text" 
+            id="new-ticket-subject" 
+            required 
+            placeholder="Brief summary of issue..."
+            class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-[#84CC16]"
+          >
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Customer Message Body</label>
+          <textarea 
+            id="new-ticket-body" 
+            rows="4" 
+            required 
+            placeholder="Enter full customer message text..."
+            class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-xs font-medium text-slate-900 focus:outline-none focus:border-[#84CC16]"
+          ></textarea>
+        </div>
+
+        <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-200">
+          <button type="button" onclick="closeIngestModal()" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold">
+            Cancel
+          </button>
+          <button type="submit" id="btn-submit-ticket" class="px-5 py-2 rounded-lg bg-[#84CC16] hover:bg-[#74b412] text-slate-950 font-bold text-xs shadow-sm">
+            Ingest & Open
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 4. CONTROLLER SCRIPT (100% Bound to window.api) -->
   <!-- ========================================================================= -->
   <script>
-    const API_BASE_URL = 'http://localhost:8000/api/v1';
-
-    // Application State
+    // State
     let tickets = [];
     let selectedTicketId = null;
     let currentFilter = 'all';
@@ -510,18 +604,18 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
       checkBackendAndLoad();
     });
 
-    // Check backend connectivity and load data
+    // Check backend health & fetch ticket queue
     async function checkBackendAndLoad() {
       try {
-        const resp = await fetch(`${API_BASE_URL}/health`, { signal: AbortSignal.timeout(3000) });
-        if (resp.ok) {
+        const health = await window.api.getHealth();
+        if (health && health.status === 'healthy') {
           isBackendOnline = true;
           updateBackendStatusUI(true);
           await loadTicketsFromBackend();
           return;
         }
       } catch (err) {
-        console.warn('Backend not responding, falling back to local dataset.', err);
+        console.warn('Backend unavailable, running in local fallback queue:', err);
       }
 
       isBackendOnline = false;
@@ -534,48 +628,42 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
       const text = document.getElementById('backend-status-text');
       if (online) {
         container.className = 'flex items-center space-x-2 text-xs px-3 py-1.5 rounded-lg bg-lime-50 text-lime-900 border border-lime-300 font-medium';
-        text.innerText = 'FastAPI: Online (Live)';
+        text.innerText = 'FastAPI: Live Connected';
       } else {
         container.className = 'flex items-center space-x-2 text-xs px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 border border-[#CBD5E1] font-medium';
-        text.innerText = 'Local Queue (Offline Demo)';
+        text.innerText = 'Local Queue (Offline)';
       }
     }
 
-    // Load tickets from live FastAPI backend
+    // Load ticket records via API
     async function loadTicketsFromBackend() {
       try {
-        const resp = await fetch(`${API_BASE_URL}/tickets?limit=100`);
-        if (resp.ok) {
-          const data = await resp.json();
-          tickets = data;
-          renderQueue();
-          if (tickets.length > 0 && !selectedTicketId) {
-            selectTicket(tickets[0].ticket.id);
-          }
-          fetchStats();
+        const data = await window.api.listTickets({ status: currentFilter });
+        tickets = data;
+        renderQueue();
+        if (tickets.length > 0 && !selectedTicketId) {
+          selectTicket(tickets[0].ticket.id);
         }
-      } catch (e) {
-        console.error('Error fetching tickets from backend:', e);
-        loadMockTickets();
+        await fetchStats();
+      } catch (err) {
+        console.error('Failed to load tickets:', err);
+        showToast('Error loading tickets: ' + err.message, true);
       }
     }
 
-    // Fetch Stats from backend
+    // Fetch aggregate queue counts
     async function fetchStats() {
       if (!isBackendOnline) return;
       try {
-        const resp = await fetch(`${API_BASE_URL}/tickets/stats`);
-        if (resp.ok) {
-          const stats = await resp.json();
-          document.getElementById('stat-total').innerText = stats.total_tickets || tickets.length;
-          document.getElementById('stat-pending').innerText = stats.by_status?.pending || 0;
-          document.getElementById('stat-approved').innerText = stats.by_status?.approved || 0;
-          document.getElementById('stat-escalated').innerText = (stats.escalated_count || 0) + (stats.urgent_count || 0);
-        }
+        const stats = await window.api.getStats();
+        document.getElementById('stat-total').innerText = stats.total_tickets || tickets.length;
+        document.getElementById('stat-pending').innerText = stats.by_status?.pending || 0;
+        document.getElementById('stat-approved').innerText = stats.by_status?.approved || 0;
+        document.getElementById('stat-escalated').innerText = (stats.escalated_count || 0) + (stats.urgent_count || 0);
       } catch (e) {}
     }
 
-    // Fallback Mock Tickets Dataset
+    // Fallback Mock Dataset (for offline development)
     function loadMockTickets() {
       tickets = [
         {
@@ -620,26 +708,6 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
         },
         {
           ticket: {
-            id: "T-003",
-            channel: "chat",
-            sender: "alex.wu@startup.io",
-            subject: "Can we add dark mode?",
-            body: "Love the product so far! Any plans to add an official dark mode theme? Would make working late hours much easier on the eyes.",
-            received_at: "2026-06-22T09:10:00Z"
-          },
-          status: "approved",
-          triage: {
-            category: "feature_request",
-            priority: "low",
-            summary: "User inquires about dark mode theme roadmap for nighttime usage.",
-            suggested_reply: "Hi Alex! Glad you are enjoying the product. Dark mode is currently on our active Q3 roadmap. I have tagged your account so you will be automatically notified once our private beta rollout begins!",
-            suggested_tags: ["feature_request", "ui", "roadmap"],
-            confidence: 0.99,
-            escalate: false
-          }
-        },
-        {
-          ticket: {
             id: "T-014",
             channel: "security-inbox",
             sender: "researcher@bugbounty.org",
@@ -664,18 +732,16 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
       if (!selectedTicketId) selectTicket("T-001");
     }
 
-    // Render left sidebar ticket list
+    // Render left ticket queue list
     function renderQueue() {
       const container = document.getElementById('tickets-container');
       
       let filtered = tickets.filter(t => {
-        // Status filter
         if (currentFilter === 'pending' && t.status !== 'pending') return false;
         if (currentFilter === 'triaged' && (!t.triage || t.status !== 'pending')) return false;
         if (currentFilter === 'escalated' && !t.triage?.escalate && t.status !== 'escalated') return false;
         if (currentFilter === 'approved' && t.status !== 'approved') return false;
 
-        // Search query
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
           const subject = (t.ticket.subject || '').toLowerCase();
@@ -716,7 +782,6 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
         const isEscalated = triage.escalate || t.status === 'escalated';
         const confidence = triage.confidence !== undefined ? Math.round(triage.confidence * 100) : null;
 
-        // Badge colors
         let priorityBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-lime-100 text-lime-900 border border-lime-300">MED</span>';
         if (priority === 'urgent') {
           priorityBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-50 text-rose-700 border border-rose-200 animate-pulse">URGENT</span>';
@@ -758,9 +823,22 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
     }
 
     // Select and display ticket details
-    function selectTicket(id) {
+    async function selectTicket(id) {
       selectedTicketId = id;
-      const record = tickets.find(t => t.ticket.id === id);
+      let record = tickets.find(t => t.ticket.id === id);
+
+      // If backend is live, fetch latest ticket state
+      if (isBackendOnline) {
+        try {
+          const fresh = await window.api.getTicket(id);
+          if (fresh) {
+            record = fresh;
+            const idx = tickets.findIndex(t => t.ticket.id === id);
+            if (idx !== -1) tickets[idx] = fresh;
+          }
+        } catch (e) {}
+      }
+
       if (!record) return;
 
       const ticket = record.ticket;
@@ -795,13 +873,9 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
       // AI Summary
       document.getElementById('detail-ai-summary').innerText = triage.summary || 'Click "Run AI Triage" to analyze this ticket.';
 
-      // Category & Priority Dropdowns
-      if (triage.category) {
-        document.getElementById('select-category').value = triage.category;
-      }
-      if (triage.priority) {
-        document.getElementById('select-priority').value = triage.priority;
-      }
+      // Category & Priority
+      if (triage.category) document.getElementById('select-category').value = triage.category;
+      if (triage.priority) document.getElementById('select-priority').value = triage.priority;
 
       // Confidence Bar
       const confidence = triage.confidence !== undefined ? Math.round(triage.confidence * 100) : 0;
@@ -855,7 +929,6 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
       // Agent Notes
       document.getElementById('editor-notes').value = record.notes || '';
 
-      // Re-render sidebar to highlight active ticket
       renderQueue();
     }
 
@@ -864,23 +937,21 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
       if (!selectedTicketId) return;
 
       const btn = document.getElementById('btn-run-triage');
-      btn.innerHTML = `<span class="animate-spin inline-block mr-1">↻</span> Triaging...`;
+      btn.innerHTML = `<span class="animate-spin inline-block mr-1">↻</span> Triaging via LLM...`;
       btn.disabled = true;
 
       try {
         if (isBackendOnline) {
-          const resp = await fetch(`${API_BASE_URL}/tickets/${selectedTicketId}/triage`, { method: 'POST' });
-          if (resp.ok) {
-            const updated = await resp.json();
-            const idx = tickets.findIndex(t => t.ticket.id === selectedTicketId);
-            if (idx !== -1) tickets[idx] = updated;
-            selectTicket(selectedTicketId);
-            showToast('AI Triage completed successfully.');
-            return;
-          }
+          const updated = await window.api.triageTicket(selectedTicketId);
+          const idx = tickets.findIndex(t => t.ticket.id === selectedTicketId);
+          if (idx !== -1) tickets[idx] = updated;
+          await selectTicket(selectedTicketId);
+          await fetchStats();
+          showToast('AI Triage completed successfully.');
+          return;
         }
 
-        // Mock simulation if offline
+        // Offline demo fallback
         await new Promise(r => setTimeout(r, 600));
         const record = tickets.find(t => t.ticket.id === selectedTicketId);
         if (record && !record.triage) {
@@ -899,7 +970,7 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
 
       } catch (err) {
         console.error(err);
-        showToast('Triage failed: ' + err.message);
+        showToast('Triage failed: ' + err.message, true);
       } finally {
         btn.innerHTML = `
           <svg class="w-4 h-4 text-[#84CC16]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -914,20 +985,15 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
     // 1-Click Approve and Send Response
     async function approveCurrentTicket() {
       if (!selectedTicketId) return;
+      const btn = document.getElementById('btn-approve');
+      btn.disabled = true;
       const finalReply = document.getElementById('editor-reply').value;
 
       try {
         if (isBackendOnline) {
-          const resp = await fetch(`${API_BASE_URL}/tickets/${selectedTicketId}/approve`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ final_reply: finalReply })
-          });
-          if (resp.ok) {
-            const updated = await resp.json();
-            const idx = tickets.findIndex(t => t.ticket.id === selectedTicketId);
-            if (idx !== -1) tickets[idx] = updated;
-          }
+          const updated = await window.api.approveTicket(selectedTicketId, finalReply);
+          const idx = tickets.findIndex(t => t.ticket.id === selectedTicketId);
+          if (idx !== -1) tickets[idx] = updated;
         } else {
           const record = tickets.find(t => t.ticket.id === selectedTicketId);
           if (record) {
@@ -937,11 +1003,13 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
         }
 
         selectTicket(selectedTicketId);
-        fetchStats();
+        await fetchStats();
         showToast(`Ticket ${selectedTicketId} approved and dispatched!`);
 
       } catch (err) {
-        showToast('Approval error: ' + err.message);
+        showToast('Approval error: ' + err.message, true);
+      } finally {
+        btn.disabled = false;
       }
     }
 
@@ -951,18 +1019,14 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
       const reason = prompt("Enter escalation reason:", "Requires Tier 2 Engineering Investigation");
       if (!reason) return;
 
+      const btn = document.getElementById('btn-escalate');
+      btn.disabled = true;
+
       try {
         if (isBackendOnline) {
-          const resp = await fetch(`${API_BASE_URL}/tickets/${selectedTicketId}/escalate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reason })
-          });
-          if (resp.ok) {
-            const updated = await resp.json();
-            const idx = tickets.findIndex(t => t.ticket.id === selectedTicketId);
-            if (idx !== -1) tickets[idx] = updated;
-          }
+          const updated = await window.api.escalateTicket(selectedTicketId, reason);
+          const idx = tickets.findIndex(t => t.ticket.id === selectedTicketId);
+          if (idx !== -1) tickets[idx] = updated;
         } else {
           const record = tickets.find(t => t.ticket.id === selectedTicketId);
           if (record) {
@@ -972,11 +1036,13 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
         }
 
         selectTicket(selectedTicketId);
-        fetchStats();
+        await fetchStats();
         showToast(`Ticket ${selectedTicketId} escalated to Tier 2.`);
 
       } catch (err) {
-        showToast('Escalation error: ' + err.message);
+        showToast('Escalation error: ' + err.message, true);
+      } finally {
+        btn.disabled = false;
       }
     }
 
@@ -988,10 +1054,9 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
 
       try {
         if (isBackendOnline) {
-          await fetch(`${API_BASE_URL}/tickets/${selectedTicketId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ edited_reply: editedReply, notes })
+          await window.api.updateTicket(selectedTicketId, {
+            edited_reply: editedReply,
+            notes: notes
           });
         }
         const record = tickets.find(t => t.ticket.id === selectedTicketId);
@@ -999,41 +1064,105 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
           record.edited_reply = editedReply;
           record.notes = notes;
         }
-      } catch (e) {}
-
-      showToast('Draft response saved locally.');
+        showToast('Draft response saved.');
+      } catch (e) {
+        showToast('Failed to save draft: ' + e.message, true);
+      }
     }
 
     // Dropdown change handlers
     async function onCategoryChanged(newCat) {
       if (!selectedTicketId) return;
-      if (isBackendOnline) {
-        await fetch(`${API_BASE_URL}/tickets/${selectedTicketId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ category: newCat })
-        });
+      try {
+        if (isBackendOnline) {
+          await window.api.updateTicket(selectedTicketId, { category: newCat });
+        }
+        const record = tickets.find(t => t.ticket.id === selectedTicketId);
+        if (record && record.triage) record.triage.category = newCat;
+        renderQueue();
+        showToast(`Category updated to #${newCat}`);
+      } catch (e) {
+        showToast('Failed to update category: ' + e.message, true);
       }
-      const record = tickets.find(t => t.ticket.id === selectedTicketId);
-      if (record && record.triage) record.triage.category = newCat;
-      renderQueue();
     }
 
     async function onPriorityChanged(newPri) {
       if (!selectedTicketId) return;
-      if (isBackendOnline) {
-        await fetch(`${API_BASE_URL}/tickets/${selectedTicketId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ priority: newPri })
-        });
+      try {
+        if (isBackendOnline) {
+          await window.api.updateTicket(selectedTicketId, { priority: newPri });
+        }
+        const record = tickets.find(t => t.ticket.id === selectedTicketId);
+        if (record && record.triage) record.triage.priority = newPri;
+        renderQueue();
+        showToast(`Priority updated to ${newPri.toUpperCase()}`);
+      } catch (e) {
+        showToast('Failed to update priority: ' + e.message, true);
       }
-      const record = tickets.find(t => t.ticket.id === selectedTicketId);
-      if (record && record.triage) record.triage.priority = newPri;
-      renderQueue();
     }
 
-    // Insert predefined snippet
+    // Modal Ingest Handlers
+    function openIngestModal() {
+      document.getElementById('modal-ingest').classList.remove('hidden');
+    }
+
+    function closeIngestModal() {
+      document.getElementById('modal-ingest').classList.add('hidden');
+    }
+
+    async function submitNewTicket(event) {
+      event.preventDefault();
+      const btn = document.getElementById('btn-submit-ticket');
+      btn.disabled = true;
+      btn.innerText = 'Ingesting...';
+
+      const channel = document.getElementById('new-ticket-channel').value;
+      const sender = document.getElementById('new-ticket-sender').value;
+      const subject = document.getElementById('new-ticket-subject').value;
+      const body = document.getElementById('new-ticket-body').value;
+
+      const newId = `T-${String(tickets.length + 1).padStart(3, '0')}`;
+      const ticketPayload = {
+        id: newId,
+        channel,
+        sender,
+        subject,
+        body,
+        received_at: new Date().toISOString()
+      };
+
+      try {
+        if (isBackendOnline) {
+          const created = await window.api.createTicket(ticketPayload);
+          tickets.unshift(created);
+        } else {
+          tickets.unshift({
+            ticket: ticketPayload,
+            status: 'pending',
+            triage: null
+          });
+        }
+
+        closeIngestModal();
+        renderQueue();
+        selectTicket(newId);
+        await fetchStats();
+        showToast(`Ticket ${newId} created successfully!`);
+
+        // Reset form
+        document.getElementById('new-ticket-sender').value = '';
+        document.getElementById('new-ticket-subject').value = '';
+        document.getElementById('new-ticket-body').value = '';
+
+      } catch (err) {
+        showToast('Failed to ingest ticket: ' + err.message, true);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Ingest & Open';
+      }
+    }
+
+    // Snippet Toolbar
     function insertSnippet(key) {
       const snippet = SNIPPETS[key];
       if (!snippet) return;
@@ -1071,9 +1200,19 @@ Hi, I noticed two identical charges of $49 on my credit card statement for June.
     }
 
     // UI Toast Helper
-    function showToast(msg) {
+    function showToast(msg, isError = false) {
       const toast = document.getElementById('action-toast');
+      const icon = document.getElementById('toast-icon');
       document.getElementById('toast-message').innerText = msg;
+
+      if (isError) {
+        icon.innerText = '!';
+        icon.className = 'w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center font-bold text-xs';
+      } else {
+        icon.innerText = '✓';
+        icon.className = 'w-5 h-5 rounded-full bg-[#84CC16] text-slate-900 flex items-center justify-center font-bold text-xs';
+      }
+
       toast.classList.remove('hidden');
       setTimeout(() => {
         toast.classList.add('hidden');
