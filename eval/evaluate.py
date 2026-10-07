@@ -28,7 +28,13 @@ def run_evaluation() -> Dict[str, Any]:
     if labels_file.exists():
         try:
             with open(labels_file, "r", encoding="utf-8") as f:
-                labels = json.load(f)
+                raw_labels = json.load(f)
+                if isinstance(raw_labels, dict) and "labels" in raw_labels:
+                    labels = raw_labels["labels"]
+                elif isinstance(raw_labels, list):
+                    labels = raw_labels
+                else:
+                    labels = []
         except Exception:
             labels = []
 

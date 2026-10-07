@@ -2,7 +2,7 @@
 
 from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TicketPriority(str, Enum):
@@ -25,10 +25,14 @@ class TicketCategory(str, Enum):
 
 class Ticket(BaseModel):
     """Schema representing an incoming support ticket."""
+    model_config = ConfigDict(populate_by_name=True)
+
     id: Optional[str] = Field(default=None, description="Unique ticket identifier")
     subject: str = Field(..., description="Subject or title of the ticket")
     body: str = Field(..., description="Main content or email text of the ticket")
-    sender: Optional[str] = Field(default=None, description="Sender email or customer id")
+    sender: Optional[str] = Field(default=None, alias="from", description="Sender email or customer id")
+    received_at: Optional[str] = Field(default=None, description="Timestamp when ticket was received")
+    channel: Optional[str] = Field(default=None, description="Channel of origin, e.g. email or webform")
 
 
 class TriageResult(BaseModel):
