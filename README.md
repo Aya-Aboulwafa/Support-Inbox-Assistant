@@ -110,6 +110,16 @@ docker compose --profile with-ollama up
 
 ---
 
+## Documentation
+
+Comprehensive engineering documentation and architecture blueprints are located in the [docs/](docs/README.md) directory:
+- [System Architecture Blueprint](docs/blueprint.md)
+- [REST API Specification](docs/api.md)
+- [Evaluation Harness & Benchmarking Guide](docs/eval-guide.md)
+- [Operations, Tooling & Workflow Guide](docs/operations.md)
+
+---
+
 ## Repository Structure
 
 ```text
@@ -125,6 +135,12 @@ Support-Inbox-Assistant/
 ├── pyproject.toml            # Project metadata & uv dependencies
 ├── uv.lock                   # Deterministic dependency lockfile
 ├── data/                     # Dataset directory (tickets.json & labels.json)
+├── docs/                     # Comprehensive architecture and API documentation
+│   ├── README.md             # Documentation hub
+│   ├── api.md                # REST API specification
+│   ├── blueprint.md          # End-to-end system architecture blueprint
+│   ├── eval-guide.md         # Evaluation harness guide
+│   └── operations.md         # Tooling and operations guide
 ├── eval/                     # Evaluation harness & metrics output (results.json)
 ├── frontend/                 # Review-queue frontend workspace
 ├── src/                      # Core application source
