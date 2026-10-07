@@ -23,6 +23,15 @@ class TicketCategory(str, Enum):
     OTHER = "other"
 
 
+class TicketStatus(str, Enum):
+    """Status lifecycle of a ticket in the review queue."""
+    PENDING = "pending"
+    TRIAGED = "triaged"
+    APPROVED = "approved"
+    ESCALATED = "escalated"
+    RESOLVED = "resolved"
+
+
 class Ticket(BaseModel):
     """Schema representing an incoming support ticket."""
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
@@ -74,3 +83,28 @@ class TriageResult(BaseModel):
         ):
             self.escalate = True
         return self
+
+
+class TicketRecord(BaseModel):
+    """Full ticket representation in the review queue store."""
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    ticket: Ticket
+    status: TicketStatus = Field(default=TicketStatus.PENDING, description="Current workflow status")
+    triage: Optional[TriageResult] = Field(default=None, description="AI triage result if analyzed")
+    edited_reply: Optional[str] = Field(default=None, description="Agent modified draft reply")
+    notes: Optional[str] = Field(default=None, description="Internal agent notes")
+    updated_at: Optional[str] = Field(default=None, description="Timestamp of last modification")
+
+
+class TicketUpdate(BaseModel):
+    """Schema for agent modifications, overrides, and action approvals."""
+    model_config = ConfigDict(extra="ignore")
+
+    status: Optional[TicketStatus] = None
+    category: Optional[TicketCategory] = None
+    priority: Optional[TicketPriority] = None
+    suggested_reply: Optional[str] = None
+    edited_reply: Optional[str] = None
+    escalate: Optional[bool] = None
+    notes: Optional[str] = None
