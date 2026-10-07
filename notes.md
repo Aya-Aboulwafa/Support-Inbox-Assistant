@@ -92,12 +92,21 @@
        - الفئات: `billing`, `bug`, `feature_request`, `account`, `security`, `other`.
        - الأولويات: `low`, `medium`, `high`, `urgent`.
   2. **نموذج التذكرة الواردة (`Ticket`):**
-     * استخدام `alias="from"` لحقل `sender` مع تفعيل `ConfigDict(populate_by_name=True)`. هذه لمسة هندسية ذكية لأن كلمة `from` محجوزة في بايثون (Reserved Keyword)، وهذا يسمح بقراءة البيانات القادمة من الـ JSON الأصلي بدون أي أخطاء syntax.
+     * استخدام `alias="from"` لحقل `sender` مع تفعيل `ConfigDict(populate_by_name=True, extra="ignore")`. هذه لمسة هندسية ذكية لأن كلمة `from` محجوزة في بايثون (Reserved Keyword)، وهذا يسمح بقراءة البيانات القادمة من الـ JSON الأصلي بدون أي أخطاء syntax، مع إسقاط أي حقول غير متوقعة بأمان.
      * الحقول الأساسية: `subject`, `body`, مع حقول إضافية اختيارية `id`, `received_at`, `channel`.
   3. **نموذج نتائج الـ Triage والـ AI Copilot (`TriageResult`):**
      * يحتوي على كل المخرجات المطلوبة: `category`, `priority`, `summary`, `suggested_reply`, `confidence`, و `escalate`.
      * ضبط حدود الثقة (`Field(..., ge=0.0, le=1.0)`) لمنع أي هلوسة في القيم الرقمية خارج النطاق.
      * إضافة `suggested_tags` كقيمة إضافية تدعم سرعة فلترة التذاكر للموظف البشري.
+  4. **تحصين الـ Validation ضد عيوب الموديلات المحلية (Schema Hardening & Resilience):**
+     * **تطبيع النصوص (Pre-validation Normalization):** استخدام `@field_validator("category", "priority", mode="before")` لتحويل القيم القادمة من الموديل تلقائياً إلى lowercase وإزالة المسافات (`strip()`). لو الموديل أرجع `"Billing "` أو `"HIGH"`، يقبلها الـ Validator بسلاسة دون أن ينهار.
+     * **حماية ضد الهلوسة (`extra="ignore"`):** لو الموديل الصغير اخترع مفاتيح إضافية في الـ JSON، يتم تجاهلها وتمرير البيانات الأساسية بنجاح.
+     * **فرض قواعد الأعمال الصارمة (Business Invariants via `@model_validator(mode="after")`):**
+       - إجبار الـ `escalate = True` فوراً في 3 حالات حرجة:
+         1. إذا كان التصنيف أمنياً (`category == security`).
+         2. إذا كانت الأولوية قصوى (`priority == urgent`).
+         3. إذا كانت درجة ثقة الموديل ضعيفة (`confidence < 0.7`).
+       - **نقطة قوة للإنترفيو:** *"حتى لو أرجع الموديل بطريق الخطأ `escalate: false` لتذكرة اختراق أمني أو مشكلة حرجة، الـ Business Invariant في الكود يعيد ضبطها إلى `true`، مما يضمن سلامة الـ Human-in-the-loop Pipeline."*
 * **الخطوات التالية في هذه المرحلة:**
   1. صياغة الـ Prompt الهندسي المخصص لـ `llama3.2:3b` مع Few-shot Examples.
   2. بناء محرك الاستدعاء (`src/services/llm.py` و `src/services/triage.py`).
