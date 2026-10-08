@@ -18,6 +18,52 @@ Support Inbox Assistant provides an extensible backend service and evaluation ha
 - **Evaluation Harness**: Automated evaluation script benchmarking triage predictions against ground truth labels
 - **CI/CD & Automation**: Automated Pytest & Docker build checks, automated git tagging and release notes via GitHub Actions
 
+### System Architecture
+
+```mermaid
+flowchart TD
+    subgraph Ingestion["1. Ingestion Layer"]
+        IncomingMail["Incoming Customer Email / Ticket"]
+        FastAPIEndpoint["FastAPI /api/v1/triage"]
+        IncomingMail --> FastAPIEndpoint
+    end
+
+    subgraph PreFilter["2. Deterministic Guardrails & Pre-filtering"]
+        FastAPIEndpoint --> RuleChecker{"Deterministic Pre-filter"}
+        RuleChecker -->|Explicit Breach / CVE / Exploit| EscalateInstant["Instant Escalation\nescalate=True, Priority=URGENT, Cat=SECURITY"]
+        RuleChecker -->|Clean Ticket Body| PromptBuilder["Context Builder & Few-Shot Formatter"]
+    end
+
+    subgraph InferenceEngine["3. SLM Inference Engine"]
+        PromptBuilder --> OllamaClient["Async OpenAI / Instructor Client\n(Ollama: llama3.2:3b)"]
+        OllamaClient --> RawOutput["Structured LLM Output"]
+    end
+
+    subgraph Validation["4. 3-Tier Validation & Resilience"]
+        RawOutput --> PydanticValidator{"Pydantic v2\nSchema Validation"}
+        PydanticValidator -->|Valid Schema| VerifiedResult["Structured TriageResult"]
+        PydanticValidator -->|Schema / Parse Drift| RetryLoop{"Self-Correction Retry Loop\n(Instructor auto-retry)"}
+        RetryLoop -->|Success| VerifiedResult
+        RetryLoop -->|Exhausted| SafeFallback["Safe Default Fallback\nescalate=True, Confidence=0.0"]
+    end
+
+    subgraph HumanInTheLoop["5. Human-in-the-Loop Review Queue"]
+        EscalateInstant --> ReviewQueue["Review Queue UI\n(Human Agent Copilot)"]
+        VerifiedResult --> ReviewQueue
+        SafeFallback --> ReviewQueue
+        ReviewQueue --> AgentAction{"Support Agent Review"}
+        AgentAction -->|Approve Draft| OutboundDelivery["Outbound Email Resolution"]
+        AgentAction -->|Edit & Save| OutboundDelivery
+        AgentAction -->|Reclassify / Override| EvalDataset["Feedback Loop & Model Calibration"]
+    end
+
+    subgraph Observability["6. Observability & Telemetry"]
+        FastAPIEndpoint -.-> Sentry["Sentry SDK (Error Tracking)"]
+        OllamaClient -.-> StructuredLogs["Structured Logging (stdout)"]
+        EvalDataset -.-> EvalHarness["make eval (Empirical Benchmark)"]
+    end
+```
+
 ---
 
 ## Requirements
