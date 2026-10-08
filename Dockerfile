@@ -21,6 +21,7 @@ RUN uv sync --frozen --no-dev --no-install-project 2>/dev/null || uv sync --no-d
 COPY src/ ./src/
 COPY eval/ ./eval/
 COPY data/ ./data/
+COPY frontend/ ./frontend/
 COPY Makefile meta.yaml ./
 
 # Complete uv sync
