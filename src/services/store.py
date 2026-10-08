@@ -17,12 +17,15 @@ from src.schemas.ticket import (
 )
 
 
+DEFAULT_DATA_FILE = Path(__file__).resolve().parent.parent.parent / "data" / "tickets.json"
+
+
 class TicketStore:
     """Thread-safe and fast in-memory store for support tickets and review queue lifecycle."""
 
     def __init__(self, data_file: Optional[Path] = None):
         self._records: Dict[str, TicketRecord] = {}
-        self.data_file = data_file or Path("data/tickets.json")
+        self.data_file = Path(data_file) if data_file else DEFAULT_DATA_FILE
         self._initialize_from_dataset()
 
     def _initialize_from_dataset(self) -> None:

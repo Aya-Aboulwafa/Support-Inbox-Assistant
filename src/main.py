@@ -58,6 +58,15 @@ if frontend_dir.exists():
         return FileResponse(str(frontend_dir / "index.html"))
 
 
+@app.get("/health", tags=["system"])
+async def root_health():
+    """Root health check endpoint."""
+    return {
+        "status": "healthy",
+        "version": "0.1.0",
+    }
+
+
 @app.get("/", tags=["root"])
 async def root():
     """Root info endpoint."""

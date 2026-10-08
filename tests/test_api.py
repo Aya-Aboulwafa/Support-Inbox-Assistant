@@ -20,12 +20,13 @@ def test_root_endpoint():
 
 
 def test_health_endpoint():
-    """Verify api/v1/health endpoint returns healthy status."""
-    response = client.get("/api/v1/health")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "healthy"
-    assert data["version"] == "0.1.0"
+    """Verify both /health and /api/v1/health endpoints return healthy status."""
+    for path in ["/health", "/api/v1/health"]:
+        response = client.get(path)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
+        assert data["version"] == "0.1.0"
 
 
 def test_list_tickets_and_stats():
