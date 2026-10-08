@@ -33,12 +33,15 @@ def calculate_macro_f1(confusion_matrix: Dict[str, Dict[str, int]], categories: 
     return round(sum(f1_scores) / len(f1_scores), 4) if f1_scores else 0.0
 
 
-async def evaluate_async(limit: Optional[int] = None) -> Dict[str, Any]:
+async def evaluate_async(
+    limit: Optional[int] = None,
+    output_path: Optional[Path] = None,
+) -> Dict[str, Any]:
     """Asynchronously evaluate all 30 tickets and produce submission predictions."""
     base_dir = Path(__file__).resolve().parent.parent
     data_dir = base_dir / "data"
     eval_dir = base_dir / "eval"
-    results_path = eval_dir / "results.json"
+    results_path = output_path if output_path is not None else (eval_dir / "results.json")
 
     tickets_file = data_dir / "tickets.json"
     labels_file = data_dir / "labels.json"
@@ -191,9 +194,11 @@ def run_evaluation() -> Dict[str, Any]:
     """Synchronous entry point conforming to Makefile and meta.yaml contract."""
     parser = argparse.ArgumentParser(description="Evaluate Support Inbox Assistant triage model.")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of tickets to evaluate")
+    parser.add_argument("--output", type=str, default=None, help="Path to write evaluation output JSON")
     args, _ = parser.parse_known_args()
 
-    return asyncio.run(evaluate_async(limit=args.limit))
+    out_path = Path(args.output) if args.output else None
+    return asyncio.run(evaluate_async(limit=args.limit, output_path=out_path))
 
 
 if __name__ == "__main__":
