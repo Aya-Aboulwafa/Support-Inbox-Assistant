@@ -13,8 +13,10 @@ Support Inbox Assistant provides an extensible backend service and evaluation ha
 - **Dependency & Tooling**: Managed with Astral `uv`
 - **LLM Integration**: Lightweight `openai` client configured for local Ollama endpoints
 - **Data Validation**: Pydantic v2 schemas
+- **Human-in-the-Loop UI**: Interactive web queue for ticket triage review and draft approval
 - **Observability**: Built-in Sentry error tracking integration and structured logging
 - **Evaluation Harness**: Automated evaluation script benchmarking triage predictions against ground truth labels
+- **CI/CD & Automation**: Automated Pytest & Docker build checks, automated git tagging and release notes via GitHub Actions
 
 ---
 
@@ -216,6 +218,10 @@ Comprehensive engineering documentation and architecture blueprints are located 
 
 ```text
 Support-Inbox-Assistant/
+├── .github/                  # GitHub Actions CI/CD & release automation
+│   └── workflows/
+│       ├── ci.yml            # Automated testing & Docker build quality gates
+│       └── release.yml       # Auto-tagging & GitHub Release notes on merge to main
 ├── .env.example              # Sample environment configuration
 ├── .gitignore                # Git ignore patterns
 ├── .python-version           # Target Python version pin
