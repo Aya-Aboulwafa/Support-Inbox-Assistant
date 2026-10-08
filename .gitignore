@@ -45,3 +45,13 @@ htmlcov/
 .DS_Store
 
 # Evaluation run output cache (eval/results.json can be tracked or kept as output)
+
+# Agent Customizations (Skills & Rules)
+.agents/
+AGENTS.md
+GEMINI.md
+skills/
+rules/
+notes.md
+ignore.md
+test_results.json

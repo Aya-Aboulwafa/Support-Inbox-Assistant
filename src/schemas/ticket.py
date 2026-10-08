@@ -1,8 +1,8 @@
-"""Ticket and triage Pydantic schemas."""
+"""Ticket and triage Pydantic schemas with resilient validation best practices."""
 
 from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
 
 class TicketPriority(str, Enum):
@@ -23,21 +23,93 @@ class TicketCategory(str, Enum):
     OTHER = "other"
 
 
+class TicketStatus(str, Enum):
+    """Status lifecycle of a ticket in the review queue."""
+    PENDING = "pending"
+    TRIAGED = "triaged"
+    APPROVED = "approved"
+    ESCALATED = "escalated"
+    RESOLVED = "resolved"
+
+
 class Ticket(BaseModel):
     """Schema representing an incoming support ticket."""
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
     id: Optional[str] = Field(default=None, description="Unique ticket identifier")
     subject: str = Field(..., description="Subject or title of the ticket")
     body: str = Field(..., description="Main content or email text of the ticket")
-    sender: Optional[str] = Field(default=None, description="Sender email or customer id")
+    sender: Optional[str] = Field(default=None, validation_alias="from", description="Sender email or customer id")
+    received_at: Optional[str] = Field(default=None, description="Timestamp when ticket was received")
+    channel: Optional[str] = Field(default=None, description="Channel of origin, e.g. email or webform")
+
+    @computed_field(alias="from")
+    @property
+    def from_email(self) -> Optional[str]:
+        """Backwards compatibility alias for 'from' field in serialization."""
+        return self.sender
 
 
 class TriageResult(BaseModel):
-    """Schema for AI-powered ticket triage output."""
+    """Schema for AI-powered ticket triage output with hardened validation."""
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
     ticket_id: Optional[str] = Field(default=None, description="ID of the triaged ticket")
-    category: Optional[TicketCategory] = Field(default=None, description="Predicted ticket category")
-    priority: Optional[TicketPriority] = Field(default=None, description="Assigned priority level")
+    category: Optional[TicketCategory] = Field(default=TicketCategory.OTHER, description="Predicted ticket category")
+    priority: Optional[TicketPriority] = Field(default=TicketPriority.MEDIUM, description="Assigned priority level")
     summary: Optional[str] = Field(default=None, description="One-line summary for rapid review")
     suggested_reply: Optional[str] = Field(default=None, description="Draft response for the agent")
     suggested_tags: List[str] = Field(default_factory=list, description="Categorical tags")
     confidence: float = Field(default=0.0, ge=0.0, le=1.0, description="Model prediction confidence score")
     escalate: bool = Field(default=False, description="Flag for immediate human intervention")
+
+    @field_validator("category", mode="before")
+    @classmethod
+    def normalize_category(cls, v: Optional[str]) -> Optional[str]:
+        """Normalize category string to lowercase and stripped before enum validation."""
+        if isinstance(v, str):
+            return v.strip().lower()
+        return v
+
+    @field_validator("priority", mode="before")
+    @classmethod
+    def normalize_priority(cls, v: Optional[str]) -> Optional[str]:
+        """Normalize priority string to lowercase and stripped before enum validation."""
+        if isinstance(v, str):
+            return v.strip().lower()
+        return v
+
+    @model_validator(mode="after")
+    def enforce_escalation_rules(self) -> "TriageResult":
+        """Enforce business rules for auto-escalating urgent or low-confidence tickets."""
+        if (
+            self.priority == TicketPriority.URGENT
+            or (self.confidence is not None and self.confidence < 0.7)
+        ):
+            self.escalate = True
+        return self
+
+
+class TicketRecord(BaseModel):
+    """Full ticket representation in the review queue store."""
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    ticket: Ticket
+    status: TicketStatus = Field(default=TicketStatus.PENDING, description="Current workflow status")
+    triage: Optional[TriageResult] = Field(default=None, description="AI triage result if analyzed")
+    edited_reply: Optional[str] = Field(default=None, description="Agent modified draft reply")
+    notes: Optional[str] = Field(default=None, description="Internal agent notes")
+    updated_at: Optional[str] = Field(default=None, description="Timestamp of last modification")
+
+
+class TicketUpdate(BaseModel):
+    """Schema for agent modifications, overrides, and action approvals."""
+    model_config = ConfigDict(extra="ignore")
+
+    status: Optional[TicketStatus] = None
+    category: Optional[TicketCategory] = None
+    priority: Optional[TicketPriority] = None
+    suggested_reply: Optional[str] = None
+    edited_reply: Optional[str] = None
+    escalate: Optional[bool] = None
+    notes: Optional[str] = None

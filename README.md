@@ -13,8 +13,10 @@ Support Inbox Assistant provides an extensible backend service and evaluation ha
 - **Dependency & Tooling**: Managed with Astral `uv`
 - **LLM Integration**: Lightweight `openai` client configured for local Ollama endpoints
 - **Data Validation**: Pydantic v2 schemas
+- **Human-in-the-Loop UI**: Interactive web queue for ticket triage review and draft approval
 - **Observability**: Built-in Sentry error tracking integration and structured logging
 - **Evaluation Harness**: Automated evaluation script benchmarking triage predictions against ground truth labels
+- **CI/CD & Automation**: Automated Pytest & Docker build checks, automated git tagging and release notes via GitHub Actions
 
 ---
 
@@ -28,27 +30,160 @@ Support Inbox Assistant provides an extensible backend service and evaluation ha
 
 ---
 
-## Installation
+## Prerequisites & Model Setup
 
-### 1. Clone & Navigate
+Ensure you have [Ollama](https://ollama.ai/) installed and pull the required model:
+
+```bash
+ollama pull llama3.2:3b
+```
+
+Ensure Ollama is running (`ollama serve` or standard service running on `http://localhost:11434`).
+
+---
+
+## Installation & Getting Started
+
+First, clone and enter the repository:
+
 ```bash
 git clone https://github.com/Aya-Aboulwafa/Support-Inbox-Assistant.git
 cd Support-Inbox-Assistant
 ```
 
-### 2. Install Dependencies with `uv`
-Use `uv` to automatically create the virtual environment (`.venv`) and install dependencies:
+Choose your preferred way to install and run the application:
+- [Method 1: The Makefile Way (Recommended)](#method-1-the-makefile-way-recommended)
+- [Method 2: The Local Development / uv Way](#method-2-the-local-development--uv-way)
+- [Method 3: The Docker & Docker Compose Way](#method-3-the-docker--docker-compose-way)
+
+---
+
+### Method 1: The Makefile Way (Recommended)
+
+The project includes pre-configured `make` targets conforming to the project's submission contract (`meta.yaml`):
+
+#### 1. Setup Environment & Dependencies
 ```bash
+cp .env.example .env
 make setup
-# Or directly via uv:
-uv sync
 ```
 
-### 3. Configure Environment Variables
-Copy the template configuration:
+#### 2. Start the Application & UI
+```bash
+make run
+```
+The server will start with hot-reload enabled at [http://localhost:8000](http://localhost:8000).
+
+#### 3. Run the Test Suite
+```bash
+make test
+```
+
+#### 4. Run the Evaluation Benchmark
+```bash
+make eval
+```
+Executes the triage benchmark against `data/tickets.json` and records metrics to `eval/results.json`.
+
+---
+
+### Method 2: The Local Development / uv Way
+
+For standard Python development using Astral `uv`:
+
+#### 1. Environment Configuration
 ```bash
 cp .env.example .env
 ```
+
+#### 2. Install Dependencies
+```bash
+uv sync --all-groups
+```
+
+#### 3. Activate Virtual Environment (Optional)
+```bash
+source .venv/bin/activate
+```
+
+#### 4. Start Server with Hot Reload
+```bash
+uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+#### 5. Run Tests
+```bash
+uv run pytest -v
+```
+
+#### 6. Run Evaluation Harness
+```bash
+uv run python -m eval.evaluate
+```
+
+---
+
+### Method 3: The Docker & Docker Compose Way
+
+#### Option A: Running with Host Ollama (Standard Development)
+When Ollama is already running on your host machine:
+
+```bash
+# Build and start container in foreground
+docker compose up --build
+
+# Or run detached in background
+docker compose up -d --build
+
+# View container logs
+docker compose logs -f app
+
+# Stop the container
+docker compose down
+```
+*Note: Uses `host.docker.internal:11434` to communicate with the host's Ollama instance. Source code is mounted live into `/app`.*
+
+#### Option B: Full Stack in Docker (Bundled Ollama Container)
+If you do not have Ollama installed on your host system:
+
+```bash
+# 1. Start both Application and Ollama services in background
+docker compose --profile with-ollama up -d --build
+
+# 2. Pull the model inside the Ollama container (first time only)
+docker compose exec ollama ollama pull llama3.2:3b
+
+# 3. View combined logs
+docker compose --profile with-ollama logs -f
+```
+
+#### Option C: Standalone Production Docker Container
+To build and run an isolated container without Docker Compose:
+
+```bash
+# 1. Build Docker image
+docker build -t support-inbox-assistant .
+
+# 2. Run container
+docker run -p 8000:8000 \
+  --add-host=host.docker.internal:host-gateway \
+  -e LLM_BASE_URL=http://host.docker.internal:11434/v1 \
+  -e LLM_MODEL=llama3.2:3b \
+  support-inbox-assistant
+```
+
+---
+
+## Access & Verification
+
+Once the application is running (via any method above):
+
+| Service / Interface | URL | Purpose |
+| :--- | :--- | :--- |
+| **Review Queue Frontend** | [http://localhost:8000/ui](http://localhost:8000/ui) | Interactive human-in-the-loop triage UI |
+| **Interactive API Docs (Swagger)** | [http://localhost:8000/docs](http://localhost:8000/docs) | OpenAPI documentation & interactive testing |
+| **Alternative Docs (ReDoc)** | [http://localhost:8000/redoc](http://localhost:8000/redoc) | Clean API reference |
+| **Health Check Endpoint** | [http://localhost:8000/health](http://localhost:8000/health) | System health & LLM connectivity status |
 
 ---
 
@@ -69,44 +204,14 @@ The project uses the following environment variables (configured in `.env` or sy
 
 ---
 
-## Execution Commands
+## Documentation
 
-All primary workflows are automated through standard `make` targets and contracts specified in `meta.yaml`:
-
-### Run Server & UI
-Start the FastAPI development server with hot-reload:
-```bash
-make run
-```
-The API documentation will be available at [http://localhost:8000/docs](http://localhost:8000/docs).
-
-### Run Test Suite
-Run unit and integration tests via `pytest`:
-```bash
-make test
-# Or directly:
-pytest -q
-```
-
-### Run Evaluation Harness
-Execute the triage benchmarking script and write results to `eval/results.json`:
-```bash
-make eval
-```
-
-### Docker Execution
-To run the service inside Docker with local code mounting:
-```bash
-# Build and start container
-docker compose up --build
-
-# Run in background
-docker compose up -d
-```
-If you wish to spin up a bundled Ollama container alongside the application:
-```bash
-docker compose --profile with-ollama up
-```
+Comprehensive engineering documentation and architecture blueprints are located in the [docs/](docs/README.md) directory:
+- [System Architecture Blueprint](docs/blueprint.md)
+- [REST API Specification](docs/api.md)
+- [Evaluation Harness & Benchmarking Guide](docs/eval-guide.md)
+- [Operations, Tooling & Workflow Guide](docs/operations.md)
+- [Future Improvements & Roadmap](docs/roadmap.md)
 
 ---
 
@@ -114,6 +219,10 @@ docker compose --profile with-ollama up
 
 ```text
 Support-Inbox-Assistant/
+├── .github/                  # GitHub Actions CI/CD & release automation
+│   └── workflows/
+│       ├── ci.yml            # Automated testing & Docker build quality gates
+│       └── release.yml       # Auto-tagging & GitHub Release notes on merge to main
 ├── .env.example              # Sample environment configuration
 ├── .gitignore                # Git ignore patterns
 ├── .python-version           # Target Python version pin
@@ -125,6 +234,13 @@ Support-Inbox-Assistant/
 ├── pyproject.toml            # Project metadata & uv dependencies
 ├── uv.lock                   # Deterministic dependency lockfile
 ├── data/                     # Dataset directory (tickets.json & labels.json)
+├── docs/                     # Comprehensive architecture and API documentation
+│   ├── README.md             # Documentation hub
+│   ├── api.md                # REST API specification
+│   ├── blueprint.md          # End-to-end system architecture blueprint
+│   ├── eval-guide.md         # Evaluation harness guide
+│   ├── operations.md         # Tooling and operations guide
+│   └── roadmap.md            # Future improvements & feature roadmap
 ├── eval/                     # Evaluation harness & metrics output (results.json)
 ├── frontend/                 # Review-queue frontend workspace
 ├── src/                      # Core application source

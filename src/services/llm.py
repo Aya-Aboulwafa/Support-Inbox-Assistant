@@ -1,6 +1,9 @@
-"""LLM client service wrapper using OpenAI's client for Ollama/OpenAI-compatible APIs."""
+"""LLM client service wrapper using OpenAI and Instructor for resilient structured outputs."""
 
+import asyncio
+import time
 from typing import Any, Dict, List, Optional
+import instructor
 from openai import AsyncOpenAI
 
 from src.core.config import settings
@@ -8,7 +11,7 @@ from src.core.logging import logger
 
 
 class LLMService:
-    """Service wrapping LLM interactions via OpenAI compatible API."""
+    """Service wrapping LLM interactions via OpenAI and Instructor."""
 
     def __init__(
         self,
@@ -24,7 +27,12 @@ class LLMService:
             base_url=self.base_url,
             api_key=self.api_key,
         )
-        logger.info(f"Initialized LLMService with model '{self.model}' at '{self.base_url}'")
+        # Patch client with Instructor using JSON mode for Ollama/OpenAI compatibility
+        self.instructor_client = instructor.from_openai(
+            self.client,
+            mode=instructor.Mode.JSON,
+        )
+        logger.info(f"Initialized LLMService with Instructor for model '{self.model}' at '{self.base_url}'")
 
     async def generate_response(
         self,
@@ -32,15 +40,54 @@ class LLMService:
         temperature: float = 0.2,
         **kwargs: Any,
     ) -> str:
-        """Generate a completion response from the configured model (placeholder)."""
+        """Generate a completion response from the configured model."""
+        start_time = time.perf_counter()
         response = await self.client.chat.completions.create(
             model=self.model,
             messages=messages,  # type: ignore
             temperature=temperature,
             **kwargs,
         )
+        latency = time.perf_counter() - start_time
         choice = response.choices[0]
-        return choice.message.content or ""
+        content = choice.message.content or ""
+        logger.debug(f"LLM call finished in {latency:.2f}s with {len(content)} chars.")
+        return content
+
+    async def generate_json(
+        self,
+        messages: List[Dict[str, str]],
+        temperature: float = 0.1,
+        **kwargs: Any,
+    ) -> str:
+        """Generate a JSON completion response enforcing structured JSON object."""
+        return await self.generate_response(
+            messages=messages,
+            temperature=temperature,
+            response_format={"type": "json_object"},
+            **kwargs,
+        )
+
+    async def warmup(self, keep_alive: str = "-1", timeout: float = 10.0) -> bool:
+        """Preload model weights into memory and keep warm in Ollama."""
+        try:
+            start_time = time.perf_counter()
+            # Send lightweight 1-token ping to load model into VRAM/RAM
+            await asyncio.wait_for(
+                self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[{"role": "user", "content": "ping"}],  # type: ignore
+                    max_tokens=1,
+                    extra_body={"keep_alive": keep_alive},
+                ),
+                timeout=timeout,
+            )
+            elapsed = time.perf_counter() - start_time
+            logger.info(f"Model '{self.model}' warmed up in {elapsed:.2f}s (keep_alive='{keep_alive}')")
+            return True
+        except Exception as exc:
+            logger.warning(f"Model warmup skipped or failed for '{self.model}': {exc}")
+            return False
 
 
 _llm_service: Optional[LLMService] = None
