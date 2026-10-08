@@ -29,6 +29,7 @@ Welcome to the technical documentation for **Support Inbox Assistant**, an enter
    - Mandatory contracts in `meta.yaml` and `Makefile`
    - Multi-stage Docker build & `docker-compose.yml`
    - 3-Tier Git branching and Conventional Commit protocols
+   - GitHub Actions CI/CD & automated release tagging pipelines
 
 ---
 
