@@ -93,4 +93,27 @@ To preserve production stability, contributors must follow the 3-tier git hierar
 4. **Commit every unit of change** using Conventional Commits (`feat`, `fix`, `chore`, `test`, `refactor`).
 5. **Verify before merge**: Run `make test` and ensure all tests pass.
 6. **Merge via non-fast-forward**: `git checkout dev && git merge --no-ff feat/<name>`.
-7. **Retain and push**: Keep feature branches and push both the feature branch and `dev` to the remote repository.
+7. **Clean up working branches**: Safely delete the working branch locally (`git branch -d feat/<name>`) and remotely (`git push origin --delete feat/<name>`).
+8. **Stop before `main`**: Never promote `dev` to `main` without explicit confirmation.
+
+---
+
+## 5. CI/CD & Automated Release Pipelines (GitHub Actions)
+
+The repository incorporates automated workflows in `.github/workflows/`:
+
+### 5.1 Continuous Integration (`.github/workflows/ci.yml`)
+- **Triggers**: On pushes and pull requests targeting `dev` and `main`.
+- **Quality Gate Job (`test`)**:
+  - Automatically provisions Python 3.12 and `astral-sh/setup-uv` with caching.
+  - Synchronizes project dependencies via `uv sync --all-groups`.
+  - Executes unit and integration test suites via `uv run pytest -v`.
+- **Docker Verification Job (`docker-build`)**:
+  - Uses Docker Buildx to build the production image (`support-inbox-assistant:ci-test`) ensuring zero build drift.
+
+### 5.2 Automated Release & Tagging (`.github/workflows/release.yml`)
+- **Trigger**: Strictly on pushes/merges to the `main` branch.
+- **Workflow Steps**:
+  1. **Version Extraction**: Inspects `pyproject.toml` to extract the canonical project semantic version.
+  2. **Tag Creation**: Tags the repository with `v<version>` (appends build number if tag already exists) and pushes to origin.
+  3. **Release Notes Generation**: Automatically compiles changelog and PR notes via GitHub's release engine (`softprops/action-gh-release@v2` with `generate_release_notes: true`) and publishes a GitHub Release.

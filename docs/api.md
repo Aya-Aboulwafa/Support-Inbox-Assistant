@@ -14,9 +14,9 @@ The Support Inbox Assistant backend exposes a high-performance RESTful API power
 
 ### 2.1 Service Health Check
 
-Checks system availability and service version.
+Checks system availability, LLM connectivity, and service version.
 
-- **Route:** `GET /api/v1/health`
+- **Routes:** `GET /health` and `GET /api/v1/health`
 - **Response Code:** `200 OK`
 - **Response Payload:**
   ```json
@@ -28,13 +28,15 @@ Checks system availability and service version.
 
 ---
 
-### 2.2 Root Service Information
+### 2.2 Root Service Information & Web UI
 
-Provides metadata regarding the active service deployment.
+Provides metadata regarding the active service deployment and hosts the human review queue.
 
-- **Route:** `GET /`
+- **Routes:**
+  - `GET /`: Service metadata JSON
+  - `GET /ui` or `GET /app`: Human-in-the-Loop Review Queue Web UI (`frontend/index.html`)
 - **Response Code:** `200 OK`
-- **Response Payload:**
+- **Root Payload (`GET /`):**
   ```json
   {
     "app": "Support Inbox Assistant",
@@ -51,6 +53,7 @@ Accepts an incoming customer support ticket, executes pre-filtering, triggers th
 
 - **Route:** `POST /api/v1/triage`
 - **Headers:** `Content-Type: application/json`
+- **Schema Compatibility:** The input model accepts both `sender` and `from` keys for sender email address.
 - **Request Body:**
   ```json
   {
