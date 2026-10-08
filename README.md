@@ -204,14 +204,107 @@ The project uses the following environment variables (configured in `.env` or sy
 
 ---
 
-## Documentation
+## How to Run Eval & Where to Read Results
 
-Comprehensive engineering documentation and architecture blueprints are located in the [docs/](docs/README.md) directory:
-- [System Architecture Blueprint](docs/blueprint.md)
-- [REST API Specification](docs/api.md)
-- [Evaluation Harness & Benchmarking Guide](docs/eval-guide.md)
-- [Operations, Tooling & Workflow Guide](docs/operations.md)
-- [Future Improvements & Roadmap](docs/roadmap.md)
+The system includes an automated evaluation harness conforming strictly to the submission contract in `meta.yaml`:
+
+```bash
+make eval
+# Or directly via uv:
+uv run python -m eval.evaluate
+```
+
+### Where Results Are Written & Interpreting Output
+The evaluation harness evaluates all 30 tickets in [`data/tickets.json`](data/tickets.json), computes accuracy metrics over the 16 ground-truth labels in [`data/labels.json`](data/labels.json), and writes the output directly to [`eval/results.json`](eval/results.json) adhering to the exact required contract:
+
+```json
+{
+  "metrics": {
+    "category_accuracy": 0.625,
+    "priority_agreement": 0.8125
+  },
+  "predictions": [
+    {
+      "id": "T-001",
+      "category": "billing",
+      "priority": "high",
+      "summary": "Customer requests refund for duplicate charge on June subscription.",
+      "suggested_reply": "Hi Marta, ...",
+      "confidence": 0.99,
+      "escalate": false
+    }
+    // ... exactly 30 prediction objects
+  ]
+}
+```
+
+### Empirical Results Achieved
+
+| Benchmark Metric | Score | Detail |
+| :--- | :---: | :--- |
+| **Total Predictions Generated** | **30 / 30** | Exactly 30 predictions generated and saved in `eval/results.json` |
+| **Labeled Ground-Truth Subset** | **16 / 16** | Evaluated against verified ground truth in `data/labels.json` |
+| **Category Classification Accuracy** | **62.5%** | 10 / 16 exact category matches (`category_accuracy: 0.625`) |
+| **Priority Agreement** | **81.25%** | 13 / 16 exact priority matches (`priority_agreement: 0.8125`) |
+| **Macro F1 Score** | **0.4571** | Class-balanced F1 score across all categories |
+| **Mean Inference Latency** | **~20.7s** | Measured per ticket on the active model endpoint |
+
+---
+
+## Error Analysis
+
+Evaluating `llama3.2:3b` empirically on the 16 ground-truth tickets revealed **6 boundary discrepancies**. Below is an objective analysis of where and why the model failed on specific tickets from the labeled subset:
+
+| Ticket ID | Subject | Predicted | Ground Truth | Root Cause Analysis |
+| :--- | :--- | :--- | :--- | :--- |
+| **`T-006`** | *URGENT: production down for our whole team* | `security` *(urgent)* | `bug` *(urgent)* | **Keyword / Urgency Bias:** The extreme urgency and outage terminology tripped the model's security sensitivity rather than classifying as an operational downtime bug. |
+| **`T-007`** | *Question about your data policy* | `feature_request` *(medium)* | `other` *(medium)* | **Negative Space Defaulting:** Legal and privacy compliance inquiries did not match bug, billing, or account; the model defaulted to a feature request rather than the general `other` bucket. |
+| **`T-013`** | *how do I add a teammate* | `feature_request` *(low)* | `account` *(low)* | **Intent Ambiguity:** Inquiring about adding team members was interpreted as asking whether collaboration features exist, rather than routine workspace user administration. |
+| **`T-017`** | *Cancel my subscription* | `account` *(medium)* | `billing` *(medium)* | **Boundary Overlap:** Subscription lifecycle cancellations straddle account termination and payment processing. The model focused on the account entity rather than the financial subscription. |
+| **`T-019`** | *Webhook signature mismatch* | `security` *(urgent)* | `bug` *(urgent)* | **Cryptographic Keyword Bias:** Words like *"signature"*, *"secret"*, and *"HMAC"* biased the model toward security, whereas developer integration bugs are operational engineering defects. |
+| **`T-024`** | *SSO / SAML for 200 users* | `account` *(medium)* | `feature_request` *(medium)* | **Capability Gap vs. Config:** Requesting enterprise SSO/SAML integration was treated as configuring an existing account rather than requesting an unintegrated enterprise feature. |
+
+### Technical Trade-offs & Parameter Limitations
+1. **3B Model Capacity Limitations:** Compact models (`llama3.2:3b`) have strong semantic comprehension but exhibit keyword attraction (e.g. associating *"signature"* or *"production down"* disproportionately with `security`).
+2. **Taxonomy Boundary Overlap:** Real customer tickets are inherently multifaceted. A customer asking to *"Cancel my subscription"* is simultaneously an account lifecycle event and a billing event.
+3. **Mitigations for Next Iteration:**
+   - **Few-Shot Boundary Calibration:** Add targeted counter-examples for developer integration webhooks and subscription cancellations directly to the system prompt.
+   - **Taxonomy Disambiguation Rules:** Explicitly define precedence rules (e.g. *"Any financial or plan change takes precedence as billing"*).
+   - **Human Review Safeguard:** The Human-in-the-Loop review queue catches all low-confidence and escalated tickets before any response is dispatched.
+
+---
+
+## Engineering Decisions, Trade-offs, Limitations & Next Steps
+
+### 1. Key Architectural Decisions
+- **`instructor` + `pydantic` over LangChain:**
+  - Avoids bloated dependency graphs, high RAM usage, and opaque abstraction layers.
+  - Guarantees strict runtime schema validation, automatic type coercion, and self-correction retry loops natively over the OpenAI client interface.
+- **Strict Human-in-the-Loop (No Autonomous Auto-Replies):**
+  - Completely eliminates catastrophic LLM hallucination and legal liability by ensuring no email is transmitted without human agent approval.
+  - The model operates strictly as an intelligent copilot, populating draft replies and classification metadata for 1-click agent review.
+- **3-Tier LLM Resilience Pattern:**
+  - **Tier 1:** Structured system prompts with XML ticket isolation and few-shot calibration.
+  - **Tier 2:** Instructor schema enforcement with validation retries and low temperature (`0.1`).
+  - **Tier 3:** Deterministic fallback safety nets (`confidence: 0.0, escalate: True`) ensuring the service never crashes or drops a ticket during network/model degradation.
+
+### 2. Architectural Trade-offs
+| Decision | Advantage | Trade-off / Compromise |
+| :--- | :--- | :--- |
+| **In-Memory `TicketStore`** | Zero external infrastructure; instant startup for evaluation and testing. | State is reset upon process restart; not suited for distributed horizontal scaling without PostgreSQL. |
+| **Local 3B SLM (`llama3.2:3b`)** | Complete data privacy, zero vendor token costs, fully offline runnable. | Reduced reasoning capacity compared to frontier models (Claude 3.5 Sonnet / GPT-4o) on ambiguous boundary cases. |
+| **Vanilla HTML/Tailwind Frontend** | Single static file served directly by FastAPI; zero Node.js build step or asset bundling overhead. | Less reactive state management compared to React/Next.js component trees. |
+
+### 3. Current Limitations
+- **Inference Latency:** Sequential remote Ollama inference averages ~20.7s per ticket without dedicated GPU batching.
+- **Single-Turn Context:** Current triage processes incoming tickets as isolated units without accessing previous multi-turn email history.
+- **Degraded Short Messages:** Extreme short/noisy inputs (e.g. `T-004: "asdkjhasd test test ignore"`) lack semantic signal for high-confidence classification.
+
+### 4. Next Steps & Production Scaling
+1. **Durable Persistence:** Migrate `TicketStore` to PostgreSQL via SQLAlchemy 2.0 and Alembic migrations.
+2. **Background Task Queues:** Decouple ticket ingestion from triage inference using Redis + Celery / ARQ workers for sub-50ms HTTP response times.
+3. **Semantic Caching:** Cache triage outputs using vector embeddings for recurring FAQs (e.g. password resets, duplicate charge reports).
+4. **LoRA Fine-Tuning Pipeline:** Feed human-agent approved replies back into a fine-tuning dataset to specialize local SLMs on company-specific domain terminology.
 
 ---
 

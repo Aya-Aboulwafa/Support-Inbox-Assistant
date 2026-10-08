@@ -51,27 +51,21 @@ The evaluation harness writes a deterministic report matching the submission spe
 
 ```json
 {
-  "status": "success",
-  "total_tickets": 30,
-  "total_labels": 30,
   "metrics": {
-    "category_accuracy": 0.867,
-    "priority_agreement": 0.833,
-    "macro_f1": 0.841,
-    "escalation_precision": 0.920,
-    "escalation_recall": 0.950,
-    "mean_latency_ms": 342.5
+    "category_accuracy": 0.625,
+    "priority_agreement": 0.8125
   },
-  "confusion_matrix": {
-    "billing": {"billing": 8, "bug": 0, "other": 1},
-    "bug": {"bug": 9, "feature_request": 1, "billing": 0},
-    "security": {"security": 4, "account": 0, "bug": 0}
-  },
-  "details": {
-    "evaluated_count": 30,
-    "model": "llama3.2:3b",
-    "timestamp": "2026-10-07T09:00:00Z"
-  }
+  "predictions": [
+    {
+      "id": "T-001",
+      "category": "billing",
+      "priority": "high",
+      "summary": "Customer charged twice for June subscription requesting duplicate refund.",
+      "suggested_reply": "Hi Marta,\n\nI apologize for the double charge...",
+      "confidence": 0.99,
+      "escalate": false
+    }
+  ]
 }
 ```
 
