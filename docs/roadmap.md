@@ -94,12 +94,78 @@ Phase 1: Resilience & Persistence  ──▶  Phase 2: RAG & Omnichannel  ──
 - Export agent-approved ticket responses as high-quality synthetic training datasets (`data/fine_tune_pairs.jsonl`).
 - Fine-tune custom LoRA adapters on local SLMs (`llama3.2:3b` / `qwen2.5:3b`) tailored precisely to the company's brand voice and tone.
 
+## 6. Post-Evaluation Analysis & Targeted Enhancements (Empirical Findings from `eval/results.json`)
+
+Based on our empirical evaluation run against the 16 ground-truth tickets in `data/labels.json`, the baseline metrics were recorded in `eval/results.json`:
+
+```text
+• Category Accuracy   : 62.5% (10/16 correct, 6 misclassified)
+• Priority Agreement  : 81.2% (13/16 matching)
+• Macro F1 Score      : 0.4571
+• Mean Latency        : 24,416.9ms (~24.4s per ticket)
+```
+
+The error analysis reveals **three primary boundary confusions** and one operational bottleneck:
+
+### 6.1 Failure Mode Analysis & Specific Remedies
+
+#### 1. Security vs. Bug Over-Triggering
+- **Mismatched Tickets:**
+  - `T-006` (*"URGENT: production down for our whole team"*) ➔ Predicted: `security` | Ground Truth: `bug`.
+  - `T-019` (*"Webhook signature mismatch"*) ➔ Predicted: `security` | Ground Truth: `bug`.
+- **Root Cause:** Urgent downtime outages and developer cryptographic keywords (*"signature mismatch"*, *"HMAC"*) tripped the security pre-filter and classification rules.
+- **Targeted Enhancement:**
+  - Refine prompt taxonomy: Explicitly clarify that API integration errors (webhook signatures, token format errors) and platform downtime are **`bug`**, reserving **`security`** strictly for active credential theft, IDOR/exploit reports, and unauthorized access.
+  - Add explicit few-shot counter-examples for developer integration bugs.
+
+#### 2. Billing vs. Account Subscription Boundary
+- **Mismatched Ticket:**
+  - `T-017` (*"Cancel my subscription"*) ➔ Predicted: `account` | Ground Truth: `billing`.
+- **Root Cause:** The model treated subscription cancellation as account lifecycle management.
+- **Targeted Enhancement:**
+  - Add explicit disambiguation directive: Any inquiry regarding payment methods, plan tiers, cancellations, refunds, or invoices must classify as **`billing`**. **`account`** is strictly for authentication, passwords, and user profile management.
+
+#### 3. Account vs. Feature Request Disambiguation
+- **Mismatched Tickets:**
+  - `T-013` (*"how do I add a teammate"*) ➔ Predicted: `feature_request` | Ground Truth: `account`.
+  - `T-024` (*"SSO / SAML for 200 users"*) ➔ Predicted: `account` | Ground Truth: `feature_request`.
+- **Root Cause:** Asking for workspace administration (*"add teammate"*) was misunderstood as requesting new functionality, whereas requesting an unsupported enterprise capability (*"SAML/SSO for 200 users"*) was classified as account setup.
+- **Targeted Enhancement:**
+  - Provide clear prompt guidance: Standard administration queries belong to **`account`**, while inquiries asking if the platform supports new protocols (SAML, SCIM, bulk imports) are **`feature_request`**.
+
+#### 4. Legal & General Policy Inquiries
+- **Mismatched Ticket:**
+  - `T-007` (*"Question about your data policy"*) ➔ Predicted: `feature_request` | Ground Truth: `other`.
+- **Targeted Enhancement:**
+  - Explicitly document that legal, privacy, terms of service, and general vendor inquiries route to **`other`**.
+
+---
+
+### 6.2 Latency Reduction Architecture
+- **Current Observation:** Mean inference latency reached ~24.4s per ticket due to remote network round-trips and generation overhead.
+- **Planned Optimizations:**
+  1. **Strict Generation Token Cap:** Reduce `llm_max_tokens` from 600 to 250 for triage predictions.
+  2. **Prompt Optimization:** Condense prompt tokens by 35% without losing few-shot guardrails.
+  3. **Local GPU Runtime:** Transition local development to native hardware-accelerated Ollama (CUDA/Metal) to achieve target latency `< 2,000ms`.
+
+---
+
+### 6.3 Target Performance Milestones
+
+| Metric | Current Baseline | Target Milestone |
+| :--- | :---: | :---: |
+| **Category Classification Accuracy** | 62.5% | **≥ 87.5%** (14+/16) |
+| **Priority Agreement** | 81.2% | **≥ 90.0%** (15+/16) |
+| **Macro F1 Score** | 0.4571 | **≥ 0.8500** |
+| **Average Response Latency** | ~24.4s | **< 2.5s** (local) |
+
 ---
 
 ## 📊 Feature Prioritization Matrix
 
 | Feature | Complexity | Business Impact | Target Phase |
 | :--- | :---: | :---: | :---: |
+| **Prompt Few-Shot Calibration (Fix 6 Eval Mismatches)** | Low | High (Accuracy: 62% ➔ 87%+) | Immediate / Phase 1 |
 | **PostgreSQL & Database Persistence** | Medium | High | Phase 1 |
 | **PII Data Sanitization Guardrail** | Low | Critical | Phase 1 |
 | **Knowledge Base RAG Integration** | Medium | High | Phase 2 |
