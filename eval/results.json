@@ -1,15 +1,41 @@
 {
   "status": "success",
-  "total_tickets": 0,
-  "total_labels": 0,
+  "total_tickets": 30,
+  "total_labels": 1,
   "metrics": {
-    "accuracy": 0.0,
-    "f1_score": 0.0,
-    "precision": 0.0,
-    "recall": 0.0
+    "category_accuracy": 1.0,
+    "priority_agreement": 1.0,
+    "macro_f1": 1.0,
+    "escalation_count": 0,
+    "mean_latency_ms": 82511.92
+  },
+  "confusion_matrix": {
+    "billing": {
+      "billing": 1
+    }
   },
   "details": {
-    "evaluated_count": 0,
-    "notes": "Initial scaffolding evaluation harness."
-  }
+    "evaluated_count": 1,
+    "model": "llama3.2:3b",
+    "temperature": 0.1,
+    "timestamp": "2026-10-08T06:32:30.669779+00:00"
+  },
+  "evaluations": [
+    {
+      "id": "T-001",
+      "category": {
+        "predicted": "billing",
+        "ground_truth": "billing",
+        "match": true
+      },
+      "priority": {
+        "predicted": "high",
+        "ground_truth": "high",
+        "match": true
+      },
+      "confidence": 0.99,
+      "escalate": false,
+      "latency_ms": 82511.92
+    }
+  ]
 }
