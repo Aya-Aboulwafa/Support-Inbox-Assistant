@@ -1,24 +1,40 @@
 {
   "status": "success",
   "total_tickets": 30,
-  "total_labels": 1,
+  "total_labels": 16,
   "metrics": {
-    "category_accuracy": 1.0,
-    "priority_agreement": 1.0,
-    "macro_f1": 1.0,
-    "escalation_count": 0,
-    "mean_latency_ms": 82511.92
+    "category_accuracy": 0.625,
+    "priority_agreement": 0.8125,
+    "macro_f1": 0.4571,
+    "escalation_count": 3,
+    "mean_latency_ms": 24416.91
   },
   "confusion_matrix": {
     "billing": {
-      "billing": 1
+      "billing": 2,
+      "account": 1
+    },
+    "bug": {
+      "bug": 4,
+      "security": 2
+    },
+    "feature_request": {
+      "feature_request": 2,
+      "account": 1
+    },
+    "account": {
+      "account": 2,
+      "feature_request": 1
+    },
+    "other": {
+      "feature_request": 1
     }
   },
   "details": {
-    "evaluated_count": 1,
+    "evaluated_count": 16,
     "model": "llama3.2:3b",
     "temperature": 0.1,
-    "timestamp": "2026-10-08T06:32:30.669779+00:00"
+    "timestamp": "2026-10-08T19:46:36.057275+00:00"
   },
   "evaluations": [
     {
@@ -35,7 +51,247 @@
       },
       "confidence": 0.99,
       "escalate": false,
-      "latency_ms": 82511.92
+      "latency_ms": 79687.75
+    },
+    {
+      "id": "T-002",
+      "category": {
+        "predicted": "bug",
+        "ground_truth": "bug",
+        "match": true
+      },
+      "priority": {
+        "predicted": "high",
+        "ground_truth": "high",
+        "match": true
+      },
+      "confidence": 0.95,
+      "escalate": false,
+      "latency_ms": 20880.1
+    },
+    {
+      "id": "T-003",
+      "category": {
+        "predicted": "feature_request",
+        "ground_truth": "feature_request",
+        "match": true
+      },
+      "priority": {
+        "predicted": "low",
+        "ground_truth": "low",
+        "match": true
+      },
+      "confidence": 0.92,
+      "escalate": false,
+      "latency_ms": 19153.33
+    },
+    {
+      "id": "T-005",
+      "category": {
+        "predicted": "account",
+        "ground_truth": "account",
+        "match": true
+      },
+      "priority": {
+        "predicted": "medium",
+        "ground_truth": "high",
+        "match": false
+      },
+      "confidence": 0.92,
+      "escalate": false,
+      "latency_ms": 20626.19
+    },
+    {
+      "id": "T-006",
+      "category": {
+        "predicted": "security",
+        "ground_truth": "bug",
+        "match": false
+      },
+      "priority": {
+        "predicted": "urgent",
+        "ground_truth": "urgent",
+        "match": true
+      },
+      "confidence": 0.99,
+      "escalate": true,
+      "latency_ms": 20826.0
+    },
+    {
+      "id": "T-007",
+      "category": {
+        "predicted": "feature_request",
+        "ground_truth": "other",
+        "match": false
+      },
+      "priority": {
+        "predicted": "medium",
+        "ground_truth": "medium",
+        "match": true
+      },
+      "confidence": 0.92,
+      "escalate": false,
+      "latency_ms": 24020.82
+    },
+    {
+      "id": "T-009",
+      "category": {
+        "predicted": "billing",
+        "ground_truth": "billing",
+        "match": true
+      },
+      "priority": {
+        "predicted": "medium",
+        "ground_truth": "low",
+        "match": false
+      },
+      "confidence": 0.92,
+      "escalate": false,
+      "latency_ms": 20252.09
+    },
+    {
+      "id": "T-011",
+      "category": {
+        "predicted": "feature_request",
+        "ground_truth": "feature_request",
+        "match": true
+      },
+      "priority": {
+        "predicted": "medium",
+        "ground_truth": "medium",
+        "match": true
+      },
+      "confidence": 0.92,
+      "escalate": false,
+      "latency_ms": 19755.67
+    },
+    {
+      "id": "T-012",
+      "category": {
+        "predicted": "bug",
+        "ground_truth": "bug",
+        "match": true
+      },
+      "priority": {
+        "predicted": "high",
+        "ground_truth": "high",
+        "match": true
+      },
+      "confidence": 0.92,
+      "escalate": true,
+      "latency_ms": 22103.54
+    },
+    {
+      "id": "T-013",
+      "category": {
+        "predicted": "feature_request",
+        "ground_truth": "account",
+        "match": false
+      },
+      "priority": {
+        "predicted": "low",
+        "ground_truth": "low",
+        "match": true
+      },
+      "confidence": 0.92,
+      "escalate": false,
+      "latency_ms": 20346.4
+    },
+    {
+      "id": "T-016",
+      "category": {
+        "predicted": "bug",
+        "ground_truth": "bug",
+        "match": true
+      },
+      "priority": {
+        "predicted": "medium",
+        "ground_truth": "medium",
+        "match": true
+      },
+      "confidence": 0.92,
+      "escalate": false,
+      "latency_ms": 17898.48
+    },
+    {
+      "id": "T-017",
+      "category": {
+        "predicted": "account",
+        "ground_truth": "billing",
+        "match": false
+      },
+      "priority": {
+        "predicted": "medium",
+        "ground_truth": "medium",
+        "match": true
+      },
+      "confidence": 0.92,
+      "escalate": false,
+      "latency_ms": 20674.98
+    },
+    {
+      "id": "T-019",
+      "category": {
+        "predicted": "security",
+        "ground_truth": "bug",
+        "match": false
+      },
+      "priority": {
+        "predicted": "urgent",
+        "ground_truth": "urgent",
+        "match": true
+      },
+      "confidence": 0.99,
+      "escalate": true,
+      "latency_ms": 20987.7
+    },
+    {
+      "id": "T-021",
+      "category": {
+        "predicted": "account",
+        "ground_truth": "account",
+        "match": true
+      },
+      "priority": {
+        "predicted": "medium",
+        "ground_truth": "high",
+        "match": false
+      },
+      "confidence": 0.92,
+      "escalate": false,
+      "latency_ms": 22222.45
+    },
+    {
+      "id": "T-022",
+      "category": {
+        "predicted": "bug",
+        "ground_truth": "bug",
+        "match": true
+      },
+      "priority": {
+        "predicted": "medium",
+        "ground_truth": "medium",
+        "match": true
+      },
+      "confidence": 0.92,
+      "escalate": false,
+      "latency_ms": 18273.8
+    },
+    {
+      "id": "T-024",
+      "category": {
+        "predicted": "account",
+        "ground_truth": "feature_request",
+        "match": false
+      },
+      "priority": {
+        "predicted": "medium",
+        "ground_truth": "medium",
+        "match": true
+      },
+      "confidence": 0.92,
+      "escalate": false,
+      "latency_ms": 22961.22
     }
   ]
 }
