@@ -6,8 +6,8 @@
     "category_accuracy": 0.625,
     "priority_agreement": 0.8125,
     "macro_f1": 0.4571,
-    "escalation_count": 3,
-    "mean_latency_ms": 24416.91
+    "escalation_count": 10,
+    "mean_latency_ms": 20732.25
   },
   "confusion_matrix": {
     "billing": {
@@ -31,267 +31,282 @@
     }
   },
   "details": {
-    "evaluated_count": 16,
+    "evaluated_count": 30,
+    "labeled_count": 16,
     "model": "llama3.2:3b",
     "temperature": 0.1,
-    "timestamp": "2026-10-08T19:46:36.057275+00:00"
+    "timestamp": "2026-10-08T20:21:56.737405+00:00"
   },
-  "evaluations": [
+  "predictions": [
     {
       "id": "T-001",
-      "category": {
-        "predicted": "billing",
-        "ground_truth": "billing",
-        "match": true
-      },
-      "priority": {
-        "predicted": "high",
-        "ground_truth": "high",
-        "match": true
-      },
+      "category": "billing",
+      "priority": "high",
+      "summary": "Customer requests refund for duplicate charge on June subscription.",
+      "suggested_reply": "Hi Marta, thank you for reaching out. We apologize for the duplicate charge on your June invoice. Our billing team is reviewing your account transaction history to verify the duplicate charge and resolve this matter for you. We will process a refund for the excess amount. Your order references INV-20614 and INV-20615 will be updated accordingly. You can expect the refund to be processed within the next 3-5 business days. If you have any further questions, please don't hesitate to contact us.",
       "confidence": 0.99,
-      "escalate": false,
-      "latency_ms": 79687.75
+      "escalate": false
     },
     {
       "id": "T-002",
-      "category": {
-        "predicted": "bug",
-        "ground_truth": "bug",
-        "match": true
-      },
-      "priority": {
-        "predicted": "high",
-        "ground_truth": "high",
-        "match": true
-      },
+      "category": "bug",
+      "priority": "high",
+      "summary": "App crashes on export to PDF, blocking deadline.",
+      "suggested_reply": "Hi Dev Null, sorry to hear that the app is freezing on export to PDF. This is a critical issue that's blocking your deadline. Can you please try updating to the latest version from the store, and if the issue persists, provide more details about the error message you're seeing? We'll do our best to resolve this ASAP.",
       "confidence": 0.95,
-      "escalate": false,
-      "latency_ms": 20880.1
+      "escalate": false
     },
     {
       "id": "T-003",
-      "category": {
-        "predicted": "feature_request",
-        "ground_truth": "feature_request",
-        "match": true
-      },
-      "priority": {
-        "predicted": "low",
-        "ground_truth": "low",
-        "match": true
-      },
+      "category": "feature_request",
+      "priority": "low",
+      "summary": "Customer requests feature: dark mode for the dashboard.",
+      "suggested_reply": "Thank you so much for your kind words about the new dashboard! We're glad you're enjoying it. We'll definitely take your suggestion into consideration for future updates. No rush, we'll keep an eye on it.",
       "confidence": 0.92,
-      "escalate": false,
-      "latency_ms": 19153.33
+      "escalate": false
+    },
+    {
+      "id": "T-004",
+      "category": "other",
+      "priority": "low",
+      "summary": "Customer sends unclear and unrelated message.",
+      "suggested_reply": "Hi there, thank you for reaching out. It seems like there might have been a miscommunication. Could you please rephrase or provide more context about what you're trying to achieve or ask?",
+      "confidence": 0.42,
+      "escalate": true
     },
     {
       "id": "T-005",
-      "category": {
-        "predicted": "account",
-        "ground_truth": "account",
-        "match": true
-      },
-      "priority": {
-        "predicted": "medium",
-        "ground_truth": "high",
-        "match": false
-      },
+      "category": "account",
+      "priority": "medium",
+      "summary": "Customer reports account lockout and billing question.",
+      "suggested_reply": "Hi Priya, sorry to hear you're locked out of your account. We'll send a new password reset email to the address you provided. Regarding your billing plan, we can help with that. Could you please confirm your current plan details and we'll let you know when your renewal is scheduled?",
       "confidence": 0.92,
-      "escalate": false,
-      "latency_ms": 20626.19
+      "escalate": false
     },
     {
       "id": "T-006",
-      "category": {
-        "predicted": "security",
-        "ground_truth": "bug",
-        "match": false
-      },
-      "priority": {
-        "predicted": "urgent",
-        "ground_truth": "urgent",
-        "match": true
-      },
+      "category": "security",
+      "priority": "urgent",
+      "summary": "Production API down for 40 minutes, impacting entire team's operations and SLA.",
+      "suggested_reply": "Hi CEO, we're taking immediate action to resolve the API outage. Our team is investigating the cause and working to restore service ASAP. We'll provide a detailed update as soon as possible. Please be assured that we're prioritizing this issue and will do everything to minimize downtime.",
       "confidence": 0.99,
-      "escalate": true,
-      "latency_ms": 20826.0
+      "escalate": true
     },
     {
       "id": "T-007",
-      "category": {
-        "predicted": "feature_request",
-        "ground_truth": "other",
-        "match": false
-      },
-      "priority": {
-        "predicted": "medium",
-        "ground_truth": "medium",
-        "match": true
-      },
+      "category": "feature_request",
+      "priority": "medium",
+      "summary": "Customer inquires about data policy and GDPR compliance for model training and data storage.",
+      "suggested_reply": "Hi Curious, thank you for reaching out. We take data privacy and GDPR compliance seriously. Our models are trained on anonymized and aggregated data, and we do not collect or store personal identifiable information. Our data centers are located in the EU, and we adhere to GDPR standards. If you have any further questions or concerns, please don't hesitate to ask.",
       "confidence": 0.92,
-      "escalate": false,
-      "latency_ms": 24020.82
+      "escalate": false
+    },
+    {
+      "id": "T-008",
+      "category": "other",
+      "priority": "low",
+      "summary": "Customer requests full system access and API keys.",
+      "suggested_reply": "I can't provide you with full system access or API keys. As a responsible assistant, I'm not authorized to share sensitive information or grant unrestricted access to our systems. If you have a legitimate need for this information, please contact our support team directly.",
+      "confidence": 1.0,
+      "escalate": false
     },
     {
       "id": "T-009",
-      "category": {
-        "predicted": "billing",
-        "ground_truth": "billing",
-        "match": true
-      },
-      "priority": {
-        "predicted": "medium",
-        "ground_truth": "low",
-        "match": false
-      },
+      "category": "billing",
+      "priority": "medium",
+      "summary": "Customer requests invoice with VAT number for accounting purposes.",
+      "suggested_reply": "Hi Helios Ltd, thank you for reaching out. We'll send over a detailed invoice for your May payment with your company VAT number. Please allow 24-48 hours for processing and delivery. If you have any questions or concerns, feel free to ask.",
       "confidence": 0.92,
-      "escalate": false,
-      "latency_ms": 20252.09
+      "escalate": false
+    },
+    {
+      "id": "T-010",
+      "category": "account",
+      "priority": "high",
+      "summary": "Customer reports failed credit card update on account page with generic error message.",
+      "suggested_reply": "Hola, lo siento mucho que estés experimentando problemas al actualizar tu tarjeta de crédito. Nuestro equipo de soporte está aquí para ayudarte. Por favor, intenta actualizar tu tarjeta de nuevo y si el problema persiste, por favor responde a este correo electrónico con más detalles sobre el error que estás recibiendo.",
+      "confidence": 0.92,
+      "escalate": false
     },
     {
       "id": "T-011",
-      "category": {
-        "predicted": "feature_request",
-        "ground_truth": "feature_request",
-        "match": true
-      },
-      "priority": {
-        "predicted": "medium",
-        "ground_truth": "medium",
-        "match": true
-      },
+      "category": "feature_request",
+      "priority": "medium",
+      "summary": "Customer requests bulk import feature for CSV files.",
+      "suggested_reply": "Hi there, thank you for reaching out! We appreciate your feedback and would love to explore the possibility of adding a bulk import feature for CSV files. Can you please provide more details on what features you'd like to see in this feature, such as data validation, import limits, or any specific requirements?",
       "confidence": 0.92,
-      "escalate": false,
-      "latency_ms": 19755.67
+      "escalate": false
     },
     {
       "id": "T-012",
-      "category": {
-        "predicted": "bug",
-        "ground_truth": "bug",
-        "match": true
-      },
-      "priority": {
-        "predicted": "high",
-        "ground_truth": "high",
-        "match": true
-      },
+      "category": "bug",
+      "priority": "high",
+      "summary": "Customer reports persistent sync bug with calendar events on mobile, despite previous requests.",
+      "suggested_reply": "Hi Frustrated, I apologize for the continued issue with your calendar events syncing on mobile. I've reviewed your previous tickets (#4471, #4502) and will escalate this to our development team for further investigation. We'll work to resolve this bug as soon as possible. Can you please confirm your mobile device and operating system for more accurate troubleshooting?",
       "confidence": 0.92,
-      "escalate": true,
-      "latency_ms": 22103.54
+      "escalate": true
     },
     {
       "id": "T-013",
-      "category": {
-        "predicted": "feature_request",
-        "ground_truth": "account",
-        "match": false
-      },
-      "priority": {
-        "predicted": "low",
-        "ground_truth": "low",
-        "match": true
-      },
+      "category": "feature_request",
+      "priority": "low",
+      "summary": "New user requests information on adding a teammate to their workspace.",
+      "suggested_reply": "Hi there, welcome to our platform! To add a teammate to your workspace, you can click on the 'Invite Team' button in the top right corner of the dashboard. If you're having trouble finding it, you can also check the help center or contact our support team for assistance.",
       "confidence": 0.92,
-      "escalate": false,
-      "latency_ms": 20346.4
+      "escalate": false
+    },
+    {
+      "id": "T-014",
+      "category": "security",
+      "priority": "urgent",
+      "summary": "Security researcher reiterates IDOR vulnerability report on /reports/{id} endpoint.",
+      "suggested_reply": "Thank you for your continued diligence in reporting this finding. We take security vulnerabilities seriously and appreciate your responsible disclosure. Please send the detailed technical information to our security team at [security-team-email@example.com](mailto:security-team-email@example.com). We will review the report and take necessary actions to address the issue.",
+      "confidence": 0.99,
+      "escalate": true
+    },
+    {
+      "id": "T-015",
+      "category": "other",
+      "priority": "low",
+      "summary": "Spam email claiming a gift card prize.",
+      "suggested_reply": "Thank you for reaching out, but this email appears to be a phishing attempt. We never send out unsolicited gift cards or ask for personal info via email. Please be cautious and do not click on any suspicious links.",
+      "confidence": 0.95,
+      "escalate": false
     },
     {
       "id": "T-016",
-      "category": {
-        "predicted": "bug",
-        "ground_truth": "bug",
-        "match": true
-      },
-      "priority": {
-        "predicted": "medium",
-        "ground_truth": "medium",
-        "match": true
-      },
+      "category": "bug",
+      "priority": "medium",
+      "summary": "Reports page slow load times since Thursday.",
+      "suggested_reply": "Sorry to hear that the reports page is taking longer to load. We're investigating the issue and will look into optimizing our server performance. In the meantime, you can try clearing your browser cache or using a different browser to see if that resolves the issue.",
       "confidence": 0.92,
-      "escalate": false,
-      "latency_ms": 17898.48
+      "escalate": false
     },
     {
       "id": "T-017",
-      "category": {
-        "predicted": "account",
-        "ground_truth": "billing",
-        "match": false
-      },
-      "priority": {
-        "predicted": "medium",
-        "ground_truth": "medium",
-        "match": true
-      },
+      "category": "account",
+      "priority": "medium",
+      "summary": "Customer requests cancellation of subscription and account deactivation.",
+      "suggested_reply": "Hi Cancel, thank you for reaching out. We're happy to help with the cancellation process. Please allow 24-48 hours for the cancellation to take effect. You will not be charged again, and your account will be deactivated. If you have any questions or concerns, feel free to ask.",
       "confidence": 0.92,
-      "escalate": false,
-      "latency_ms": 20674.98
+      "escalate": false
+    },
+    {
+      "id": "T-018",
+      "category": "other",
+      "priority": "low",
+      "summary": "Customer reports generic system malfunction without specific error details.",
+      "suggested_reply": "Hi there, thank you for contacting us. We want to help get this resolved as quickly as possible. Can you please provide more information about what's not working and what you were doing when the issue started?",
+      "confidence": 0.65,
+      "escalate": true
     },
     {
       "id": "T-019",
-      "category": {
-        "predicted": "security",
-        "ground_truth": "bug",
-        "match": false
-      },
-      "priority": {
-        "predicted": "urgent",
-        "ground_truth": "urgent",
-        "match": true
-      },
+      "category": "security",
+      "priority": "urgent",
+      "summary": "Webhook signature mismatch due to potential secret rotation, impacting production integration.",
+      "suggested_reply": "Hi Integrations team, thank you for reaching out. We apologize for the disruption. We did rotate our signing secret recently, but it appears we missed announcing the change to our webhooks. We'll investigate and update our documentation to ensure this doesn't happen again. Can you please confirm if the issue is resolved now?",
       "confidence": 0.99,
-      "escalate": true,
-      "latency_ms": 20987.7
+      "escalate": true
+    },
+    {
+      "id": "T-020",
+      "category": "feature_request",
+      "priority": "medium",
+      "summary": "Customer requests feature comparison between Pro and Team plans.",
+      "suggested_reply": "Hi Q, thank you for reaching out. We'd be happy to help you understand the differences between our Pro and Team plans. You can find a detailed feature comparison on our website, under the 'Pricing' section. If you have any specific questions or concerns, feel free to ask and we'll do our best to assist you.",
+      "confidence": 0.92,
+      "escalate": false
     },
     {
       "id": "T-021",
-      "category": {
-        "predicted": "account",
-        "ground_truth": "account",
-        "match": true
-      },
-      "priority": {
-        "predicted": "medium",
-        "ground_truth": "high",
-        "match": false
-      },
+      "category": "account",
+      "priority": "medium",
+      "summary": "Customer requests deletion of personal data under GDPR.",
+      "suggested_reply": "Dear GDPR Requester, thank you for your request to delete your personal data. We will process your request within the statutory timeframe of 30 days. You will receive a confirmation email once the deletion is complete. Please note that we will not be able to provide you with a copy of your deleted data. If you have any further questions or concerns, please don't hesitate to reach out.",
       "confidence": 0.92,
-      "escalate": false,
-      "latency_ms": 22222.45
+      "escalate": false
     },
     {
       "id": "T-022",
-      "category": {
-        "predicted": "bug",
-        "ground_truth": "bug",
-        "match": true
-      },
-      "priority": {
-        "predicted": "medium",
-        "ground_truth": "medium",
-        "match": true
-      },
+      "category": "bug",
+      "priority": "medium",
+      "summary": "iOS user reports stopped receiving push notifications after app update.",
+      "suggested_reply": "Hi there, sorry to hear that push notifications stopped working on your iPhone. We'll investigate this issue. Can you please try resetting the app's notification settings to their default values and see if that resolves the issue?",
       "confidence": 0.92,
-      "escalate": false,
-      "latency_ms": 18273.8
+      "escalate": false
+    },
+    {
+      "id": "T-023",
+      "category": "other",
+      "priority": "low",
+      "summary": "Customer reports resolving issue without assistance.",
+      "suggested_reply": "",
+      "confidence": 0.0,
+      "escalate": true
     },
     {
       "id": "T-024",
-      "category": {
-        "predicted": "account",
-        "ground_truth": "feature_request",
-        "match": false
-      },
-      "priority": {
-        "predicted": "medium",
-        "ground_truth": "medium",
-        "match": true
-      },
+      "category": "account",
+      "priority": "medium",
+      "summary": "Enterprise lead inquires about SAML SSO and SCIM provisioning for 200-user rollout.",
+      "suggested_reply": "Hi there, thank you for considering our platform for your organization. We do support SAML SSO and SCIM provisioning, but it's currently available on our Enterprise plan. We'd be happy to discuss the details and provide a quote for the 200-user rollout. Our sales team will be in touch to explore the possibilities.",
       "confidence": 0.92,
-      "escalate": false,
-      "latency_ms": 22961.22
+      "escalate": false
+    },
+    {
+      "id": "T-025",
+      "category": "billing",
+      "priority": "high",
+      "summary": "Customer requests refund for incorrect annual plan charge.",
+      "suggested_reply": "Hi Angry, thank you for reaching out. We apologize for the mistake and want to make it right. We'll process a refund for the incorrect charge. Please allow 3-5 business days for the refund to be processed. Once the refund is complete, we'll send you a confirmation email. If you'd like to re-subscribe to the monthly plan, we can assist you with that as well.",
+      "confidence": 0.92,
+      "escalate": false
+    },
+    {
+      "id": "T-026",
+      "category": "other",
+      "priority": "low",
+      "summary": "Customer reports minor typo on website.",
+      "suggested_reply": "Thank you for bringing this to our attention. We appreciate your help in making our website more accurate. We'll make sure to correct the typo.",
+      "confidence": 0.65,
+      "escalate": true
+    },
+    {
+      "id": "T-027",
+      "category": "account",
+      "priority": "medium",
+      "summary": "Customer requests export of all account data.",
+      "suggested_reply": "Hi Data Export, thank you for reaching out. We do offer data export options, but they might not be exactly what you're looking for. Our current export feature allows you to export specific data types (e.g., users, reports, etc.) in CSV format. However, exporting all data at once is not a standard feature. Would you like us to provide more information on the export options available or help you explore alternative solutions?",
+      "confidence": 0.92,
+      "escalate": false
+    },
+    {
+      "id": "T-028",
+      "category": "billing",
+      "priority": "medium",
+      "summary": "Customer reports incorrect charge amount on credit card statement.",
+      "suggested_reply": "Hi there, thank you for reaching out. We apologize for the discrepancy in your charge. We'll review your account to determine the cause of the extra charge. Can you please confirm your subscription plan details so we can investigate further?",
+      "confidence": 0.92,
+      "escalate": false
+    },
+    {
+      "id": "T-029",
+      "category": "bug",
+      "priority": "urgent",
+      "summary": "Customer follows up on 503 errors from morning outage.",
+      "suggested_reply": "Hi Outage Follow-up, thank you for your patience and for following up on the 503 errors. Our team is actively investigating the cause and has made progress in resolving the issue. We're expecting to have a full recovery soon, but we'll provide an update as soon as it's confirmed. We'll notify you as soon as the issue is fully resolved.",
+      "confidence": 0.95,
+      "escalate": true
+    },
+    {
+      "id": "T-030",
+      "category": "other",
+      "priority": "low",
+      "summary": "Customer sends an empty email with a request for help.",
+      "suggested_reply": "Hi there, thank you for reaching out. Unfortunately, we can't assist with requests that don't contain any information. Could you please provide more details about the issue you're experiencing?",
+      "confidence": 0.0,
+      "escalate": true
     }
   ]
 }
