@@ -1,0 +1,60 @@
+name: Release on Merge to Main
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Tag & GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from pyproject.toml
+        id: get_version
+        run: |
+          VERSION=$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)
+          if [ -z "$VERSION" ]; then
+            echo "Error: Version could not be resolved from pyproject.toml" >&2
+            exit 1
+          fi
+          echo "version=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Target tag candidate: v$VERSION"
+
+      - name: Check, create, and push git tag
+        id: create_tag
+        run: |
+          TAG="${{ steps.get_version.outputs.version }}"
+          
+          # If tag already exists, append build run number to avoid collision
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists in git. Appending build number suffix..."
+            TAG="${TAG}-build.${{ github.run_number }}"
+          fi
+
+          echo "Final release tag: $TAG"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+          echo "release_tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release with auto-generated notes
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.create_tag.outputs.release_tag }}
+          name: Release ${{ steps.create_tag.outputs.release_tag }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
