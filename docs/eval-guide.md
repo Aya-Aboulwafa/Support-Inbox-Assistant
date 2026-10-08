@@ -51,26 +51,9 @@ The evaluation harness writes a deterministic report matching the submission spe
 
 ```json
 {
-  "status": "success",
-  "total_tickets": 30,
-  "total_labels": 16,
   "metrics": {
     "category_accuracy": 0.625,
-    "priority_agreement": 0.8125,
-    "macro_f1": 0.4571,
-    "escalation_count": 2,
-    "mean_latency_ms": 24416.9
-  },
-  "confusion_matrix": {
-    "billing": {"billing": 2, "account": 0},
-    "bug": {"bug": 4, "security": 2},
-    "security": {"security": 0}
-  },
-  "details": {
-    "evaluated_count": 30,
-    "labeled_count": 16,
-    "model": "llama3.2:3b",
-    "timestamp": "2026-10-08T22:46:00Z"
+    "priority_agreement": 0.8125
   },
   "predictions": [
     {

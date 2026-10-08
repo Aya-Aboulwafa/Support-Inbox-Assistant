@@ -161,23 +161,9 @@ async def evaluate_async(limit: Optional[int] = None) -> Dict[str, Any]:
     macro_f1 = calculate_macro_f1(confusion_matrix, all_categories)
 
     results: Dict[str, Any] = {
-        "status": "success",
-        "total_tickets": total_tickets,
-        "total_labels": total_labels_count,
         "metrics": {
             "category_accuracy": category_acc,
             "priority_agreement": priority_agree,
-            "macro_f1": macro_f1,
-            "escalation_count": escalated_count,
-            "mean_latency_ms": mean_latency,
-        },
-        "confusion_matrix": serializable_confusion,
-        "details": {
-            "evaluated_count": total_tickets,
-            "labeled_count": labeled_evaluated_count,
-            "model": settings.llm_model,
-            "temperature": settings.llm_temperature,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
         },
         "predictions": predictions,
     }

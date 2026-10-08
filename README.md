@@ -204,7 +204,7 @@ The project uses the following environment variables (configured in `.env` or sy
 
 ---
 
-## Evaluation Harness & Empirical Benchmark
+## How to Run Eval & Where to Read Results
 
 The system includes an automated evaluation harness conforming strictly to the submission contract in `meta.yaml`:
 
@@ -214,20 +214,14 @@ make eval
 uv run python -m eval.evaluate
 ```
 
-### Evaluation Output (`eval/results.json`)
-The script evaluates all 30 tickets in [`data/tickets.json`](data/tickets.json), scores predictions against the 16 verified ground-truth labels in [`data/labels.json`](data/labels.json), and writes the output directly to [`eval/results.json`](eval/results.json) adhering to the submission contract:
+### Where Results Are Written & Interpreting Output
+The evaluation harness evaluates all 30 tickets in [`data/tickets.json`](data/tickets.json), computes accuracy metrics over the 16 ground-truth labels in [`data/labels.json`](data/labels.json), and writes the output directly to [`eval/results.json`](eval/results.json) adhering to the exact required contract:
 
 ```json
 {
-  "status": "success",
-  "total_tickets": 30,
-  "total_labels": 16,
   "metrics": {
     "category_accuracy": 0.625,
-    "priority_agreement": 0.8125,
-    "macro_f1": 0.4571,
-    "escalation_count": 10,
-    "mean_latency_ms": 20732.25
+    "priority_agreement": 0.8125
   },
   "predictions": [
     {
@@ -244,22 +238,22 @@ The script evaluates all 30 tickets in [`data/tickets.json`](data/tickets.json),
 }
 ```
 
-### Empirical Results Summary
+### Empirical Results Achieved
 
 | Benchmark Metric | Score | Detail |
 | :--- | :---: | :--- |
-| **Total Predictions** | **30 / 30** | Exactly 30 predictions generated and saved in `eval/results.json` |
-| **Labeled Subset Evaluated** | **16 / 16** | Evaluated against verified ground truth in `data/labels.json` |
-| **Category Classification Accuracy** | **62.5%** | 10 / 16 exact category matches |
-| **Priority Agreement** | **81.25%** | 13 / 16 exact priority matches |
-| **Macro F1 Score** | **0.4571** | Macro average across all category classes |
+| **Total Predictions Generated** | **30 / 30** | Exactly 30 predictions generated and saved in `eval/results.json` |
+| **Labeled Ground-Truth Subset** | **16 / 16** | Evaluated against verified ground truth in `data/labels.json` |
+| **Category Classification Accuracy** | **62.5%** | 10 / 16 exact category matches (`category_accuracy: 0.625`) |
+| **Priority Agreement** | **81.25%** | 13 / 16 exact priority matches (`priority_agreement: 0.8125`) |
+| **Macro F1 Score** | **0.4571** | Class-balanced F1 score across all categories |
 | **Mean Inference Latency** | **~20.7s** | Measured per ticket on the active model endpoint |
 
 ---
 
-## Honest Error Analysis (Labeled Subset)
+## Error Analysis
 
-Evaluating `llama3.2:3b` empirically on the 16 ground-truth tickets revealed **6 boundary discrepancies**. Below is a transparent analysis of each mismatch:
+Evaluating `llama3.2:3b` empirically on the 16 ground-truth tickets revealed **6 boundary discrepancies**. Below is an objective analysis of where and why the model failed on specific tickets from the labeled subset:
 
 | Ticket ID | Subject | Predicted | Ground Truth | Root Cause Analysis |
 | :--- | :--- | :--- | :--- | :--- |
@@ -280,7 +274,7 @@ Evaluating `llama3.2:3b` empirically on the 16 ground-truth tickets revealed **6
 
 ---
 
-## Engineering Decisions, Trade-offs & Limitations
+## Engineering Decisions, Trade-offs, Limitations & Next Steps
 
 ### 1. Key Architectural Decisions
 - **`instructor` + `pydantic` over LangChain:**

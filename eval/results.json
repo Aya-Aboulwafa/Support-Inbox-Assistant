@@ -1,41 +1,7 @@
 {
-  "status": "success",
-  "total_tickets": 30,
-  "total_labels": 16,
   "metrics": {
     "category_accuracy": 0.625,
-    "priority_agreement": 0.8125,
-    "macro_f1": 0.4571,
-    "escalation_count": 10,
-    "mean_latency_ms": 20732.25
-  },
-  "confusion_matrix": {
-    "billing": {
-      "billing": 2,
-      "account": 1
-    },
-    "bug": {
-      "bug": 4,
-      "security": 2
-    },
-    "feature_request": {
-      "feature_request": 2,
-      "account": 1
-    },
-    "account": {
-      "account": 2,
-      "feature_request": 1
-    },
-    "other": {
-      "feature_request": 1
-    }
-  },
-  "details": {
-    "evaluated_count": 30,
-    "labeled_count": 16,
-    "model": "llama3.2:3b",
-    "temperature": 0.1,
-    "timestamp": "2026-10-08T20:21:56.737405+00:00"
+    "priority_agreement": 0.8125
   },
   "predictions": [
     {
