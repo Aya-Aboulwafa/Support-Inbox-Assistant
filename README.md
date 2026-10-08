@@ -211,6 +211,7 @@ Comprehensive engineering documentation and architecture blueprints are located 
 - [REST API Specification](docs/api.md)
 - [Evaluation Harness & Benchmarking Guide](docs/eval-guide.md)
 - [Operations, Tooling & Workflow Guide](docs/operations.md)
+- [Future Improvements & Roadmap](docs/roadmap.md)
 
 ---
 
@@ -238,7 +239,8 @@ Support-Inbox-Assistant/
 │   ├── api.md                # REST API specification
 │   ├── blueprint.md          # End-to-end system architecture blueprint
 │   ├── eval-guide.md         # Evaluation harness guide
-│   └── operations.md         # Tooling and operations guide
+│   ├── operations.md         # Tooling and operations guide
+│   └── roadmap.md            # Future improvements & feature roadmap
 ├── eval/                     # Evaluation harness & metrics output (results.json)
 ├── frontend/                 # Review-queue frontend workspace
 ├── src/                      # Core application source

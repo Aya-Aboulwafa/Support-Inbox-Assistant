@@ -31,6 +31,13 @@ Welcome to the technical documentation for **Support Inbox Assistant**, an enter
    - 3-Tier Git branching and Conventional Commit protocols
    - GitHub Actions CI/CD & automated release tagging pipelines
 
+5. **[Future Improvements & Roadmap](roadmap.md)**
+   - Planned database persistence migration (PostgreSQL / Alembic)
+   - Knowledge Base Retrieval-Augmented Generation (RAG)
+   - Real-time WebSockets & agent collision detection
+   - Omnichannel ingestion connectors (Gmail / Slack / Zendesk)
+   - Advanced LLM observability (Langfuse) & LoRA fine-tuning
+
 ---
 
 ## 🚀 Quick Start Commands
